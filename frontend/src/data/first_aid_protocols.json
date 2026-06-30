@@ -1,0 +1,186 @@
+[
+  {
+    "id": "cpr_needed",
+    "severity": "critical",
+    "source": "WHO First Aid 2024",
+    "steps": [
+      {
+        "step": 1,
+        "en": "Call emergency services immediately",
+        "bn": "অবিলম্বে জরুরি সেবায় কল করুন",
+        "th": "โทรหน่วยฉุกเฉินทันที",
+        "ne": "तुरुन्त आपतकालीन सेवामा फोन गर्नुस्",
+        "icon": "phone"
+      },
+      {
+        "step": 2,
+        "en": "Do NOT move the victim if spinal injury suspected",
+        "bn": "মেরুদণ্ডে আঘাতের সন্দেহ থাকলে আহতকে সরাবেন না",
+        "th": "อย่าเคลื่อนย้ายหากสงสัยว่ากระดูกสันหลังได้รับบาดเจ็บ",
+        "ne": "मेरुदण्डमा चोट भएको आशंका छ भने नसार्नुस्",
+        "icon": "warning"
+      },
+      {
+        "step": 3,
+        "en": "Tilt head back gently, lift chin to open airway",
+        "bn": "মাথা আলতো করে পিছনে হেলান, শ্বাসনালী খুলতে থুতনি তুলুন",
+        "th": "เอียงศีรษะไปด้านหลังเบาๆ ยกคางเพื่อเปิดทางเดินหายใจ",
+        "ne": "टाउको बिस्तारै पछाडि हालेर श्वासनलीखोल्न चिउँडो उठाउनुस्",
+        "icon": "airway"
+      },
+      {
+        "step": 4,
+        "en": "Start CPR: 30 chest compressions then 2 rescue breaths",
+        "bn": "CPR শুরু করুন: ৩০টি বুকে চাপ, তারপর ২টি শ্বাস",
+        "th": "เริ่ม CPR: กดหน้าอก 30 ครั้ง แล้วช่วยหายใจ 2 ครั้ง",
+        "ne": "CPR सुरु गर्नुस्: ३० छाती थिच्नुस् त्यसपछि २ पटक श्वास",
+        "icon": "cpr"
+      },
+      {
+        "step": 5,
+        "en": "Continue until ambulance arrives or victim starts breathing",
+        "bn": "অ্যাম্বুলেন্স না আসা বা শ্বাস শুরু না হওয়া পর্যন্ত চালিয়ে যান",
+        "th": "ทำต่อไปจนกว่ารถพยาบาลจะมาหรือผู้บาดเจ็บหายใจได้",
+        "ne": "एम्बुलेन्स नआउँदासम्म वा श्वास नसुरु हुँदासम्म जारी राख्नुस्",
+        "icon": "continue"
+      }
+    ],
+    "warnings": [
+      "Do not give food or water",
+      "Do not leave victim alone"
+    ]
+  },
+  {
+    "id": "critical_trauma",
+    "severity": "critical",
+    "source": "WHO First Aid 2024",
+    "steps": [
+      {
+        "step": 1,
+        "en": "Call emergency services immediately",
+        "bn": "অবিলম্বে জরুরি সেবায় কল করুন",
+        "th": "โทรหน่วยฉุกเฉินทันที",
+        "ne": "तुरुन्त आपतकालीन सेवामा फोन गर्नुस्",
+        "icon": "phone"
+      },
+      {
+        "step": 2,
+        "en": "Apply firm direct pressure to bleeding wounds with cloth",
+        "bn": "কাপড় দিয়ে রক্তপাতের ক্ষতে সরাসরি শক্ত চাপ দিন",
+        "th": "ใช้ผ้ากดแผลที่มีเลือดออกโดยตรงอย่างแน่นหนา",
+        "ne": "कपडाले रगत बगिरहेको घाउमा सिधा दबाब दिनुस्",
+        "icon": "pressure"
+      },
+      {
+        "step": 3,
+        "en": "Do not remove embedded objects from wounds",
+        "bn": "ক্ষতে বিদ্ধ বস্তু সরাবেন না",
+        "th": "อย่าเอาวัตถุที่ฝังอยู่ในแผลออก",
+        "ne": "घाउमा घोपिएको वस्तु नहटाउनुस्",
+        "icon": "warning"
+      },
+      {
+        "step": 4,
+        "en": "Keep victim warm and still",
+        "bn": "আহতকে উষ্ণ ও স্থির রাখুন",
+        "th": "ดูแลให้ผู้บาดเจ็บอบอุ่นและอยู่นิ่ง",
+        "ne": "पीडितलाई न्यानो र स्थिर राख्नुस्",
+        "icon": "warmth"
+      },
+      {
+        "step": 5,
+        "en": "Reassure the victim — talk calmly until help arrives",
+        "bn": "আহতকে আশ্বস্ত করুন — সাহায্য না আসা পর্যন্ত শান্তভাবে কথা বলুন",
+        "th": "ปลอบใจผู้บาดเจ็บ — พูดคุยสงบๆ จนกว่าความช่วยเหลือจะมาถึง",
+        "ne": "पीडितलाई आश्वासन दिनुस् — सहायता नआउँदासम्म शान्तसँग बोल्नुस्",
+        "icon": "talk"
+      }
+    ],
+    "warnings": [
+      "Do not give liquids",
+      "Do not move if spinal injury suspected"
+    ]
+  },
+  {
+    "id": "serious_trauma",
+    "severity": "serious",
+    "source": "WHO First Aid 2024",
+    "steps": [
+      {
+        "step": 1,
+        "en": "Call for medical help",
+        "bn": "চিকিৎসা সহায়তার জন্য কল করুন",
+        "th": "โทรขอความช่วยเหลือทางการแพทย์",
+        "ne": "चिकित्सा सहायताको लागि फोन गर्नुस्",
+        "icon": "phone"
+      },
+      {
+        "step": 2,
+        "en": "Control bleeding with clean cloth and pressure",
+        "bn": "পরিষ্কার কাপড় ও চাপ দিয়ে রক্তপাত নিয়ন্ত্রণ করুন",
+        "th": "ควบคุมการเลือดออกด้วยผ้าสะอาดและการกด",
+        "ne": "सफा कपडा र दबाबले रगत रोक्नुस्",
+        "icon": "pressure"
+      },
+      {
+        "step": 3,
+        "en": "Immobilise any suspected fractures",
+        "bn": "সন্দেহজনক ভাঙা হাড় স্থির রাখুন",
+        "th": "ตรึงกระดูกที่สงสัยว่าหัก",
+        "ne": "संदिग्ध भाँचिएको हड्डी स्थिर राख्नुस्",
+        "icon": "fracture"
+      },
+      {
+        "step": 4,
+        "en": "Monitor breathing and consciousness",
+        "bn": "শ্বাস ও চেতনা পর্যবেক্ষণ করুন",
+        "th": "ติดตามการหายใจและสติ",
+        "ne": "श्वास र होस पर्यवेक्षण गर्नुस्",
+        "icon": "monitor"
+      }
+    ],
+    "warnings": [
+      "Watch for shock symptoms: pale skin, rapid breathing"
+    ]
+  },
+  {
+    "id": "minor_injury",
+    "severity": "stable",
+    "source": "WHO First Aid 2024",
+    "steps": [
+      {
+        "step": 1,
+        "en": "Move victim to safe location away from traffic",
+        "bn": "আহতকে ট্রাফিক থেকে দূরে নিরাপদ স্থানে নিয়ে যান",
+        "th": "เคลื่อนย้ายผู้บาดเจ็บไปยังที่ปลอดภัยห่างจากการจราจร",
+        "ne": "पीडितलाई सवारी साधनबाट टाढा सुरक्षित ठाउँमा लैजानुस्",
+        "icon": "move"
+      },
+      {
+        "step": 2,
+        "en": "Clean wounds with clean water if available",
+        "bn": "পাওয়া গেলে পরিষ্কার পানি দিয়ে ক্ষত পরিষ্কার করুন",
+        "th": "ล้างแผลด้วยน้ำสะอาดหากมี",
+        "ne": "उपलब्ध भए सफा पानीले घाउ सफा गर्नुस्",
+        "icon": "clean"
+      },
+      {
+        "step": 3,
+        "en": "Apply bandage or clean cloth to cuts",
+        "bn": "কাটা স্থানে ব্যান্ডেজ বা পরিষ্কার কাপড় লাগান",
+        "th": "ใช้ผ้าพันแผลหรือผ้าสะอาดกับบาดแผล",
+        "ne": "काटेको ठाउँमा पट्टी वा सफा कपडा लगाउनुस्",
+        "icon": "bandage"
+      },
+      {
+        "step": 4,
+        "en": "Transport to nearest clinic or hospital for evaluation",
+        "bn": "মূল্যায়নের জন্য নিকটতম ক্লিনিক বা হাসপাতালে নিয়ে যান",
+        "th": "ส่งตัวไปคลินิกหรือโรงพยาบาลที่ใกล้ที่สุดเพื่อประเมิน",
+        "ne": "मूल्यांकनको लागि नजिकको क्लिनिक वा अस्पताल लैजानुस्",
+        "icon": "hospital"
+      }
+    ],
+    "warnings": []
+  }
+]

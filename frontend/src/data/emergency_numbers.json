@@ -1,0 +1,72 @@
+[
+  {
+    "country_code": "BD",
+    "country_name": "Bangladesh",
+    "police": "999",
+    "ambulance": "199",
+    "fire": "199",
+    "unified": "999",
+    "languages": ["bn", "en"],
+    "flag": "🇧🇩"
+  },
+  {
+    "country_code": "IN",
+    "country_name": "India",
+    "police": "100",
+    "ambulance": "108",
+    "fire": "101",
+    "unified": "112",
+    "languages": ["hi", "en"],
+    "flag": "🇮🇳"
+  },
+  {
+    "country_code": "TH",
+    "country_name": "Thailand",
+    "police": "191",
+    "ambulance": "1669",
+    "fire": "199",
+    "unified": "1669",
+    "languages": ["th", "en"],
+    "flag": "🇹🇭"
+  },
+  {
+    "country_code": "NP",
+    "country_name": "Nepal",
+    "police": "100",
+    "ambulance": "102",
+    "fire": "101",
+    "unified": "112",
+    "languages": ["ne", "en"],
+    "flag": "🇳🇵"
+  },
+  {
+    "country_code": "LK",
+    "country_name": "Sri Lanka",
+    "police": "119",
+    "ambulance": "1990",
+    "fire": "110",
+    "unified": "1990",
+    "languages": ["si", "ta", "en"],
+    "flag": "🇱🇰"
+  },
+  {
+    "country_code": "MM",
+    "country_name": "Myanmar",
+    "police": "199",
+    "ambulance": "192",
+    "fire": "191",
+    "unified": "199",
+    "languages": ["my", "en"],
+    "flag": "🇲🇲"
+  },
+  {
+    "country_code": "BT",
+    "country_name": "Bhutan",
+    "police": "113",
+    "ambulance": "112",
+    "fire": "110",
+    "unified": "112",
+    "languages": ["dz", "en"],
+    "flag": "🇧🇹"
+  }
+]
