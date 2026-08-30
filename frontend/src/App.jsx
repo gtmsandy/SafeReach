@@ -6,6 +6,7 @@ import FirstAidCard from './components/FirstAidCard';
 import MapView from './components/MapView';
 import CountrySelector from './components/CountrySelector';
 import SettingsScreen from './components/SettingsScreen';
+import EmergencyContacts from './components/EmergencyContacts';
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
       <Route path="/map" element={<MapView />} />
       <Route path="/countries" element={<CountrySelector />} />
       <Route path="/settings" element={<SettingsScreen />} />
+      <Route path="/emergency-contacts" element={<EmergencyContacts />} />
     </Routes>
   );
 }
