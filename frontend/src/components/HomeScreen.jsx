@@ -5,11 +5,11 @@ import {
   Activity,
   Settings,
   ShieldCheck,
-  Phone,
   Map,
   Stethoscope,
   Building2,
   Users,
+  ChevronRight,
 } from 'lucide-react';
 
 import SilentSOSButton from './SilentSOSButton';
@@ -41,7 +41,6 @@ export default function HomeScreen() {
 
   const voiceRef = useRef(null);
 
-  // ── Country auto-detection ───────────────────────────────
   useEffect(() => {
     const saved = localStorage.getItem('safereach_country');
 
@@ -108,7 +107,6 @@ export default function HomeScreen() {
         total: 1,
       });
 
-      // Prewarm local map area
       if (lat !== null && lng !== null) {
         await prewarmLocalArea(
           lat,
@@ -122,7 +120,6 @@ export default function HomeScreen() {
         );
       }
 
-      // Prewarm active country
       const bounds = bimstecBounds.find(
         (b) => b.country_code === info.country_code
       );
@@ -141,7 +138,6 @@ export default function HomeScreen() {
 
       setTileProgress(null);
 
-      // Background prewarm
       prewarmAllCountries().catch((error) => {
         console.warn(
           'Background prewarm failed:',
@@ -151,7 +147,6 @@ export default function HomeScreen() {
     }
   }
 
-  // ── Refresh country on app return ─────────────────────────
   useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
@@ -183,7 +178,6 @@ export default function HomeScreen() {
       );
   }, []);
 
-  // ── Crash detection ───────────────────────────────────────
   useEffect(() => {
     const crashEnabled =
       localStorage.getItem(
@@ -208,7 +202,6 @@ export default function HomeScreen() {
     return () => stopCrashDetection();
   }, []);
 
-  // ── Online/offline detection ──────────────────────────────
   useEffect(() => {
     const onOnline = () => setIsOnline(true);
     const onOffline = () => setIsOnline(false);
@@ -236,7 +229,6 @@ export default function HomeScreen() {
     };
   }, []);
 
-  // ── Voice trigger ─────────────────────────────────────────
   useEffect(() => {
     const SpeechRecognition =
       window.SpeechRecognition ||
@@ -307,6 +299,7 @@ export default function HomeScreen() {
         className="screen"
         style={{
           background: 'var(--bg-primary)',
+          minHeight: '100vh',
         }}
       >
         {/* Top bar */}
@@ -417,8 +410,16 @@ export default function HomeScreen() {
 
         {/* Main content */}
         <main
-          className="flex-1 flex flex-col px-5 pt-8 pb-24"
-          style={{ gap: 24 }}
+          className="flex-1 flex flex-col px-5 pt-7"
+          style={{
+            gap: 20,
+
+            /*
+             * Reserve only the space actually needed by
+             * the fixed SOS emergency dock.
+             */
+            paddingBottom: 105,
+          }}
         >
           {/* Hero */}
           <div className="flex flex-col gap-4">
@@ -451,16 +452,18 @@ export default function HomeScreen() {
             </div>
           </div>
 
-          {/* Main emergency button */}
+          {/* Primary guided emergency action */}
           <button
             id="btn-find-help"
             className="btn-primary"
             style={{
-              paddingTop: 20,
-              paddingBottom: 20,
+              paddingTop: 18,
+              paddingBottom: 18,
               borderRadius: 18,
               fontSize: 17,
               gap: 10,
+              boxShadow:
+                '0 8px 24px rgba(40, 86, 132, 0.22)',
             }}
             onClick={() =>
               navigate('/triage')
@@ -476,7 +479,12 @@ export default function HomeScreen() {
 
           {/* Emergency quick calls */}
           {emergency && (
-            <div className="call-card">
+            <section
+              className="call-card"
+              style={{
+                paddingBottom: 18,
+              }}
+            >
               <div
                 className="text-micro mb-4"
                 style={{
@@ -511,51 +519,76 @@ export default function HomeScreen() {
                   id="btn-call-hospital"
                 />
               </div>
-            </div>
+            </section>
           )}
 
-          {/* Navigation */}
-          <div className="flex gap-2 flex-wrap">
-            <NavPill
-              label="Map"
-              icon={<Map size={15} />}
-              onClick={() =>
-                navigate('/map')
-              }
-              id="btn-nav-map"
-            />
+          {/* Utility navigation */}
+          <section>
+            <div
+              className="text-micro"
+              style={{
+                color: 'var(--text-tertiary)',
+                letterSpacing: '0.08em',
+                marginBottom: 10,
+                fontWeight: 700,
+              }}
+            >
+              QUICK ACCESS
+            </div>
 
-            <NavPill
-              label="Active Region"
-              icon={<Building2 size={15} />}
-              onClick={() =>
-                navigate('/countries')
-              }
-              id="btn-nav-countries"
-            />
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns:
+                  'repeat(2, minmax(0, 1fr))',
+                gap: 10,
+              }}
+            >
+              <QuickAccessCard
+                label="Map"
+                description="Nearby facilities"
+                icon={<Map size={19} />}
+                onClick={() =>
+                  navigate('/map')
+                }
+                id="btn-nav-map"
+              />
 
-            <NavPill
-              label="First Aid"
-              icon={<Stethoscope size={15} />}
-              onClick={() =>
-                navigate(
-                  '/firstaid/minor_injury'
-                )
-              }
-              id="btn-nav-firstaid"
-            />
+              <QuickAccessCard
+                label="Active Region"
+                description="Change country"
+                icon={<Building2 size={19} />}
+                onClick={() =>
+                  navigate('/countries')
+                }
+                id="btn-nav-countries"
+              />
 
-            <NavPill
-              label="Contacts"
-              icon={<Users size={15} />}
-              onClick={() =>
-                navigate(
-                  '/emergency-contacts'
-                )
-              }
-              id="btn-nav-emergency-contacts"
-            />
-          </div>
+              <QuickAccessCard
+                label="First Aid"
+                description="Emergency guidance"
+                icon={<Stethoscope size={19} />}
+                onClick={() =>
+                  navigate(
+                    '/firstaid/minor_injury'
+                  )
+                }
+                id="btn-nav-firstaid"
+              />
+
+              <QuickAccessCard
+                label="Contacts"
+                description="Emergency contacts"
+                icon={<Users size={19} />}
+                onClick={() =>
+                  navigate(
+                    '/emergency-contacts'
+                  )
+                }
+                id="btn-nav-emergency-contacts"
+              />
+            </div>
+          </section>
 
           {/* Offline mode */}
           {!isOnline && (
@@ -572,9 +605,9 @@ export default function HomeScreen() {
             >
               <div
                 style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
+                  width: 38,
+                  height: 38,
+                  borderRadius: 11,
                   background:
                     'var(--stable-bg)',
                   border:
@@ -586,7 +619,7 @@ export default function HomeScreen() {
                 }}
               >
                 <ShieldCheck
-                  size={18}
+                  size={19}
                   color="var(--stable)"
                 />
               </div>
@@ -608,14 +641,14 @@ export default function HomeScreen() {
                   className="text-label"
                   style={{ marginTop: 2 }}
                 >
-                  All features work without internet
+                  All essential features remain available
                 </div>
               </div>
             </div>
           )}
         </main>
 
-        {/* Silent SOS */}
+        {/* Fixed primary emergency dock */}
         <SilentSOSButton country={country} />
       </div>
     </>
@@ -703,8 +736,9 @@ function QuickCallButton({
   );
 }
 
-function NavPill({
+function QuickAccessCard({
   label,
+  description,
   icon,
   onClick,
   id,
@@ -713,18 +747,75 @@ function NavPill({
     <button
       id={id}
       onClick={onClick}
-      className="nav-pill"
+      style={{
+        width: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 11,
+        padding: '13px 12px',
+        background: 'var(--bg-elevated)',
+        border: '1px solid var(--border)',
+        borderRadius: 15,
+        cursor: 'pointer',
+        textAlign: 'left',
+        boxShadow: 'var(--shadow-xs)',
+        transition:
+          'transform 0.15s ease, box-shadow 0.15s ease',
+        WebkitTapHighlightColor: 'transparent',
+      }}
     >
-      <span
+      <div
         style={{
-          color: 'var(--accent)',
+          width: 38,
+          height: 38,
+          borderRadius: 11,
+          background: 'var(--accent-soft)',
           display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'var(--accent)',
+          flexShrink: 0,
         }}
       >
         {icon}
-      </span>
+      </div>
 
-      {label}
+      <div
+        style={{
+          minWidth: 0,
+          flex: 1,
+        }}
+      >
+        <div
+          style={{
+            fontSize: 13,
+            fontWeight: 750,
+            color: 'var(--text-primary)',
+            lineHeight: 1.2,
+          }}
+        >
+          {label}
+        </div>
+
+        <div
+          style={{
+            fontSize: 10,
+            color: 'var(--text-tertiary)',
+            marginTop: 3,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {description}
+        </div>
+      </div>
+
+      <ChevronRight
+        size={15}
+        color="var(--text-tertiary)"
+        strokeWidth={2}
+      />
     </button>
   );
 }
