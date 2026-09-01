@@ -1,24 +1,57 @@
-import { useEffect, useState } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+
 import { useTranslation } from 'react-i18next';
-import { ShieldAlert, Shield, AlertTriangle, Phone } from 'lucide-react';
-import { triggerSilentSOS } from '../logic/silentSOS';
+
+import {
+  ShieldAlert,
+  Shield,
+  AlertTriangle,
+  Phone,
+} from 'lucide-react';
+
+import {
+  triggerSilentSOS,
+} from '../logic/silentSOS';
 
 function getSavedContact() {
   try {
-    return JSON.parse(localStorage.getItem('sos_contact') || '{}');
+    return JSON.parse(
+      localStorage.getItem('sos_contact') || '{}'
+    );
   } catch {
     return {};
   }
 }
 
-export default function SilentSOSButton({ country }) {
+export default function SilentSOSButton({
+  country,
+}) {
   const { t } = useTranslation();
 
-  const [showSetup, setShowSetup] = useState(false);
+  const [showSetup, setShowSetup] =
+    useState(false);
+
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [contact, setContact] = useState(getSavedContact);
-  const [pressed, setPressed] = useState(false);
+
+  const [contact, setContact] =
+    useState(getSavedContact);
+
+  const [holdProgress, setHoldProgress] =
+    useState(0);
+
+  const [isHolding, setIsHolding] =
+    useState(false);
+
+  const holdStartRef = useRef(null);
+  const animationRef = useRef(null);
+  const triggeredRef = useRef(false);
+
+  const HOLD_DURATION = 3000;
 
   useEffect(() => {
     function handleContactUpdate() {
@@ -45,11 +78,19 @@ export default function SilentSOSButton({ country }) {
         'storage',
         handleContactUpdate
       );
+
+      if (animationRef.current) {
+        cancelAnimationFrame(
+          animationRef.current
+        );
+      }
     };
   }, []);
 
   function handleSaveContact() {
-    if (!name.trim() || !phone.trim()) return;
+    if (!name.trim() || !phone.trim()) {
+      return;
+    }
 
     const saved = {
       name: name.trim(),
@@ -72,12 +113,13 @@ export default function SilentSOSButton({ country }) {
     triggerSilentSOS(country);
   }
 
-  async function handlePress() {
-    setPressed(true);
+  async function completeSOS() {
+    if (triggeredRef.current) return;
 
-    setTimeout(() => {
-      setPressed(false);
-    }, 180);
+    triggeredRef.current = true;
+
+    setIsHolding(false);
+    setHoldProgress(100);
 
     const saved = getSavedContact();
 
@@ -85,50 +127,145 @@ export default function SilentSOSButton({ country }) {
       setName(saved.name || '');
       setPhone(saved.phone || '');
       setShowSetup(true);
+
+      setTimeout(() => {
+        triggeredRef.current = false;
+        setHoldProgress(0);
+      }, 300);
+
       return;
     }
 
     await triggerSilentSOS(country);
+
+    setTimeout(() => {
+      triggeredRef.current = false;
+      setHoldProgress(0);
+    }, 600);
+  }
+
+  function updateHoldProgress(timestamp) {
+    if (!holdStartRef.current) {
+      return;
+    }
+
+    const elapsed =
+      timestamp - holdStartRef.current;
+
+    const progress = Math.min(
+      (elapsed / HOLD_DURATION) * 100,
+      100
+    );
+
+    setHoldProgress(progress);
+
+    if (progress >= 100) {
+      completeSOS();
+      return;
+    }
+
+    animationRef.current =
+      requestAnimationFrame(
+        updateHoldProgress
+      );
+  }
+
+  function startHold(event) {
+    event.preventDefault();
+
+    if (isHolding || triggeredRef.current) {
+      return;
+    }
+
+    setIsHolding(true);
+    setHoldProgress(0);
+
+    holdStartRef.current =
+      performance.now();
+
+    animationRef.current =
+      requestAnimationFrame(
+        updateHoldProgress
+      );
+  }
+
+  function cancelHold() {
+    if (triggeredRef.current) {
+      return;
+    }
+
+    if (animationRef.current) {
+      cancelAnimationFrame(
+        animationRef.current
+      );
+    }
+
+    holdStartRef.current = null;
+
+    setIsHolding(false);
+    setHoldProgress(0);
+  }
+
+  function handleKeyDown(event) {
+    if (
+      event.key === 'Enter' ||
+      event.key === ' '
+    ) {
+      if (!event.repeat) {
+        startHold(event);
+      }
+    }
+  }
+
+  function handleKeyUp(event) {
+    if (
+      event.key === 'Enter' ||
+      event.key === ' '
+    ) {
+      cancelHold();
+    }
   }
 
   function handleCloseSetup() {
     setShowSetup(false);
     setName('');
     setPhone('');
+    setHoldProgress(0);
+    setIsHolding(false);
   }
 
   return (
     <>
-      {/* Primary SOS Section - Normal document flow */}
-      <div
+      {/* SOS Section */}
+      <section
         style={{
           width: '100%',
-          marginTop: 14,
-          paddingBottom: 20,
+          paddingBottom: 4,
         }}
       >
-        {/* Emergency Contact Status */}
-        {contact.name ? (
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              marginBottom: 10,
-            }}
-          >
+        {/* Contact status directly above SOS */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            marginBottom: 9,
+          }}
+        >
+          {contact.name ? (
             <div
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 7,
-                padding: '6px 13px',
+                padding: '6px 12px',
                 borderRadius: 999,
-                background: 'rgba(34, 197, 94, 0.08)',
-                border: '1px solid rgba(34, 197, 94, 0.25)',
+                background:
+                  'rgba(34, 197, 94, 0.08)',
+                border:
+                  '1px solid rgba(34, 197, 94, 0.25)',
                 fontSize: 10,
                 fontWeight: 700,
                 color: 'var(--text-secondary)',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
               }}
             >
               <span
@@ -136,7 +273,7 @@ export default function SilentSOSButton({ country }) {
                   width: 6,
                   height: 6,
                   borderRadius: '50%',
-                  background: '#22c55e',
+                  background: '#22C55E',
                   flexShrink: 0,
                 }}
               />
@@ -153,15 +290,7 @@ export default function SilentSOSButton({ country }) {
                 {contact.name}
               </strong>
             </div>
-          </div>
-        ) : (
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              marginBottom: 10,
-            }}
-          >
+          ) : (
             <div
               style={{
                 fontSize: 10,
@@ -169,81 +298,128 @@ export default function SilentSOSButton({ country }) {
                 color: 'var(--text-secondary)',
                 padding: '6px 12px',
                 borderRadius: 999,
-                background: 'var(--surface)',
-                border: '1px solid var(--border)',
+                background:
+                  'var(--bg-elevated)',
+                border:
+                  '1px solid var(--border)',
               }}
             >
-              Set an emergency contact for SOS alerts
+              Hold SOS to set emergency contact
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* Main SOS Button */}
+        {/* SOS Button */}
         <button
           id="btn-silent-sos"
-          onClick={handlePress}
+          type="button"
           aria-label={t('silent_sos')}
+          aria-describedby="sos-instruction"
+          onPointerDown={startHold}
+          onPointerUp={cancelHold}
+          onPointerLeave={cancelHold}
+          onPointerCancel={cancelHold}
+          onKeyDown={handleKeyDown}
+          onKeyUp={handleKeyUp}
           style={{
             width: '100%',
-            minHeight: 64,
+            minHeight: 70,
+
+            position: 'relative',
+            overflow: 'hidden',
 
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
 
-            padding: '10px 18px',
+            padding: '11px 17px',
 
-            border: 'none',
+            border:
+              isHolding
+                ? '2px solid #FFFFFF'
+                : '1px solid rgba(255,255,255,0.22)',
+
             borderRadius: 18,
 
             background:
-              'linear-gradient(135deg, #991B1B 0%, #DC2626 55%, #B91C1C 100%)',
+              'linear-gradient(135deg, #991B1B 0%, #DC2626 52%, #B91C1C 100%)',
 
             cursor: 'pointer',
 
-            boxShadow: pressed
-              ? '0 3px 10px rgba(153, 27, 27, 0.3)'
-              : '0 7px 22px rgba(185, 28, 28, 0.32)',
+            boxShadow: isHolding
+              ? '0 8px 28px rgba(185,28,28,0.50)'
+              : '0 6px 18px rgba(185,28,28,0.30)',
 
-            transform: pressed
+            transform: isHolding
               ? 'scale(0.985)'
               : 'scale(1)',
 
             transition:
               'transform 0.15s ease, box-shadow 0.15s ease',
 
-            WebkitTapHighlightColor: 'transparent',
+            WebkitTapHighlightColor:
+              'transparent',
+
+            touchAction: 'none',
             userSelect: 'none',
           }}
         >
+          {/* Hold progress */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: `${holdProgress}%`,
+              background:
+                'rgba(255,255,255,0.18)',
+              transition: isHolding
+                ? 'none'
+                : 'width 0.15s ease',
+              pointerEvents: 'none',
+            }}
+          />
+
           {/* Left Icon */}
           <div
             style={{
-              width: 42,
-              height: 42,
-              borderRadius: 13,
+              position: 'relative',
+              zIndex: 1,
+
+              width: 45,
+              height: 45,
+
+              borderRadius: 14,
 
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
 
-              background: 'rgba(255,255,255,0.15)',
-              border: '1px solid rgba(255,255,255,0.22)',
+              background:
+                'rgba(255,255,255,0.15)',
+
+              border:
+                '1px solid rgba(255,255,255,0.25)',
+
+              flexShrink: 0,
             }}
           >
             <ShieldAlert
-              size={23}
-              color="#fff"
-              strokeWidth={2.5}
+              size={24}
+              color="#FFFFFF"
+              strokeWidth={2.6}
             />
           </div>
 
-          {/* SOS Text */}
+          {/* SOS Content */}
           <div
             style={{
+              position: 'relative',
+              zIndex: 1,
+
               flex: 1,
               textAlign: 'left',
               marginLeft: 12,
+              minWidth: 0,
             }}
           >
             <div
@@ -258,7 +434,7 @@ export default function SilentSOSButton({ country }) {
                   fontSize: 19,
                   fontWeight: 900,
                   letterSpacing: '0.08em',
-                  color: '#fff',
+                  color: '#FFFFFF',
                   lineHeight: 1,
                 }}
               >
@@ -268,12 +444,13 @@ export default function SilentSOSButton({ country }) {
               <span
                 style={{
                   fontSize: 9,
-                  fontWeight: 800,
-                  letterSpacing: '0.08em',
+                  fontWeight: 850,
+                  letterSpacing: '0.07em',
                   padding: '3px 6px',
                   borderRadius: 5,
-                  background: 'rgba(255,255,255,0.18)',
-                  color: '#fff',
+                  background:
+                    'rgba(255,255,255,0.18)',
+                  color: '#FFFFFF',
                 }}
               >
                 EMERGENCY
@@ -281,41 +458,56 @@ export default function SilentSOSButton({ country }) {
             </div>
 
             <div
+              id="sos-instruction"
               style={{
                 marginTop: 5,
                 fontSize: 10,
-                fontWeight: 600,
-                color: 'rgba(255,255,255,0.85)',
+                fontWeight: 650,
+                color:
+                  'rgba(255,255,255,0.92)',
               }}
             >
-              Trigger emergency assistance
+              {isHolding
+                ? `Keep holding... ${Math.ceil(
+                    (HOLD_DURATION / 1000) *
+                      (1 -
+                        holdProgress / 100)
+                  )}s`
+                : 'Hold for 3 seconds to trigger'}
             </div>
           </div>
 
-          {/* Right phone indicator */}
+          {/* Right indicator */}
           <div
             style={{
-              width: 34,
-              height: 34,
+              position: 'relative',
+              zIndex: 1,
+
+              width: 36,
+              height: 36,
 
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
 
               borderRadius: '50%',
-              background: 'rgba(255,255,255,0.12)',
+
+              background:
+                'rgba(255,255,255,0.13)',
+
+              flexShrink: 0,
             }}
           >
             <Phone
               size={17}
-              color="#fff"
-              strokeWidth={2.4}
+              color="#FFFFFF"
+              strokeWidth={2.5}
             />
           </div>
         </button>
-      </div>
+      </section>
 
-      {/* Emergency Contact Setup Bottom Sheet */}
+      {/* Emergency Contact Setup */}
       {showSetup && (
         <>
           <div
@@ -333,7 +525,8 @@ export default function SilentSOSButton({ country }) {
                   width: 48,
                   height: 48,
                   borderRadius: 14,
-                  background: 'var(--critical-bg)',
+                  background:
+                    'var(--critical-bg)',
                   border:
                     '1px solid var(--critical-border)',
                   display: 'flex',
@@ -356,7 +549,8 @@ export default function SilentSOSButton({ country }) {
                 <p
                   className="text-label"
                   style={{
-                    color: 'var(--text-secondary)',
+                    color:
+                      'var(--text-secondary)',
                     marginTop: 3,
                   }}
                 >
@@ -365,34 +559,36 @@ export default function SilentSOSButton({ country }) {
               </div>
             </div>
 
-            {/* Explanation */}
+            {/* Information */}
             <div
               style={{
                 padding: '11px 13px',
                 marginBottom: 16,
                 borderRadius: 12,
-                background: 'var(--critical-bg)',
+                background:
+                  'var(--critical-bg)',
                 border:
                   '1px solid var(--critical-border)',
                 fontSize: 12,
                 lineHeight: 1.5,
-                color: 'var(--text-secondary)',
+                color:
+                  'var(--text-secondary)',
               }}
             >
-              Your emergency contact will receive an SMS with
-              your location after emergency assistance is
-              triggered.
+              Your emergency contact will receive an SMS
+              with your location after emergency
+              assistance is triggered.
             </div>
 
-            {/* Contact Inputs */}
+            {/* Inputs */}
             <div className="flex flex-col gap-3 mb-5">
               <input
                 id="sos-setup-name"
                 className="sr-input"
                 placeholder={t('contact_name')}
                 value={name}
-                onChange={(e) =>
-                  setName(e.target.value)
+                onChange={(event) =>
+                  setName(event.target.value)
                 }
               />
 
@@ -402,8 +598,8 @@ export default function SilentSOSButton({ country }) {
                 type="tel"
                 placeholder={t('contact_phone')}
                 value={phone}
-                onChange={(e) =>
-                  setPhone(e.target.value)
+                onChange={(event) =>
+                  setPhone(event.target.value)
                 }
               />
             </div>

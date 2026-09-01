@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, Mic } from 'lucide-react';
+import { ChevronLeft, Check } from 'lucide-react';
 import { QUESTIONS, classify } from '../logic/triage';
 import { saveTriageSession } from '../logic/offlineDB';
 
@@ -26,146 +26,378 @@ export default function TriageFlow() {
 
     const newResponses = [
       ...responses,
-      { q_id: question.id, option_id: selected },
+      {
+        q_id: question.id,
+        option_id: selected,
+      },
     ];
 
     if (isLast) {
       const result = classify(newResponses);
-      const country = localStorage.getItem('safereach_country') || 'BD';
+
+      const country =
+        localStorage.getItem('safereach_country') || 'BD';
+
       await saveTriageSession({
         country_code: country,
         severity: result.severity,
         was_offline: !navigator.onLine,
       }).catch(() => {});
-      sessionStorage.setItem('triage_result', JSON.stringify(result));
+
+      sessionStorage.setItem(
+        'triage_result',
+        JSON.stringify(result)
+      );
+
       navigate('/results');
-    } else {
-      setResponses(newResponses);
-      setCurrentQ((q) => q + 1);
-      setSelected(null);
+      return;
     }
+
+    setResponses(newResponses);
+    setCurrentQ((q) => q + 1);
+    setSelected(null);
   }
 
   function handleBack() {
-    if (currentQ === 0) { navigate('/'); return; }
-    const prevResponse = responses[currentQ - 1];
-    setSelected(prevResponse?.option_id || null);
-    setResponses((r) => r.slice(0, -1));
+    if (currentQ === 0) {
+      navigate('/');
+      return;
+    }
+
+    const previousResponse = responses[currentQ - 1];
+
+    setSelected(previousResponse?.option_id || null);
+
+    setResponses((currentResponses) =>
+      currentResponses.slice(0, -1)
+    );
+
     setCurrentQ((q) => q - 1);
   }
 
   return (
-    <div className="screen">
-      {/* ── Top bar ── */}
-      <header className="topbar">
-        <button
-          onClick={handleBack}
-          className="touch-target flex items-center gap-1"
-          style={{ color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 4px' }}
-          id="btn-triage-back"
-        >
-          <ChevronLeft size={22} />
-          <span className="text-label">{t('back')}</span>
-        </button>
+    <div
+      className="screen"
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: 'var(--bg)',
+      }}
+    >
+      {/* ───────────────── Header ───────────────── */}
 
-        {/* Step dots */}
-        <div className="step-dots">
-          {QUESTIONS.map((_, i) => (
+      <header
+        style={{
+          padding: '16px 20px 14px',
+          background: 'var(--bg-card)',
+          borderBottom: '1px solid var(--border)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 20,
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 14,
+          }}
+        >
+          {/* Back Button */}
+
+          <button
+            id="btn-triage-back"
+            onClick={handleBack}
+            aria-label={t('back')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              padding: '6px 4px',
+              minWidth: 70,
+            }}
+          >
+            <ChevronLeft size={22} />
+
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: 600,
+              }}
+            >
+              {t('back')}
+            </span>
+          </button>
+
+          {/* Title */}
+
+          <div
+            style={{
+              textAlign: 'center',
+            }}
+          >
             <div
-              key={i}
-              className={`step-dot ${i === currentQ ? 'active' : i < currentQ ? 'done' : 'inactive'}`}
-              style={{ width: i === currentQ ? 20 : 6 }}
-            />
-          ))}
+              style={{
+                fontSize: 14,
+                fontWeight: 800,
+                color: 'var(--text-primary)',
+              }}
+            >
+              Emergency Assessment
+            </div>
+          </div>
+
+          {/* Step */}
+
+          <div
+            style={{
+              minWidth: 70,
+              textAlign: 'right',
+              fontSize: 13,
+              fontWeight: 700,
+              color: 'var(--text-secondary)',
+            }}
+          >
+            {currentQ + 1} / {QUESTIONS.length}
+          </div>
         </div>
 
-        <span className="text-label" style={{ color: 'var(--text-tertiary)', minWidth: 40, textAlign: 'right' }}>
-          {currentQ + 1}/{QUESTIONS.length}
-        </span>
+        {/* Progress */}
+
+        <div
+          style={{
+            width: '100%',
+            height: 8,
+            background: 'var(--border)',
+            borderRadius: 999,
+            overflow: 'hidden',
+          }}
+        >
+          <div
+            style={{
+              width: `${progress}%`,
+              height: '100%',
+              background:
+                'linear-gradient(90deg, #DC2626, #F97316)',
+              borderRadius: 999,
+              transition: 'width 0.35s ease',
+            }}
+          />
+        </div>
+
+        {/* Progress Label */}
+
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            marginTop: 7,
+          }}
+        >
+          <span
+            style={{
+              fontSize: 11,
+              fontWeight: 600,
+              color: 'var(--text-tertiary)',
+            }}
+          >
+            Emergency triage
+          </span>
+
+          <span
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              color: 'var(--accent)',
+            }}
+          >
+            {Math.round(progress)}% complete
+          </span>
+        </div>
       </header>
 
-      {/* ── Progress bar ── */}
-      <div className="sr-progress-track" style={{ borderRadius: 0 }}>
-        <div className="sr-progress-fill" style={{ width: `${progress}%`, borderRadius: 0 }} />
-      </div>
+      {/* ───────────────── Main Content ───────────────── */}
 
-      {/* ── Content ── */}
-      <main className="flex-1 flex flex-col px-5 pt-7 pb-6 gap-6">
+      <main
+        style={{
+          flex: 1,
+          width: '100%',
+          maxWidth: 680,
+          margin: '0 auto',
+          padding: '28px 20px 130px',
+        }}
+      >
+        {/* Question Label */}
 
-        {/* Triage label */}
-        <div className="flex items-center gap-2">
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            padding: '6px 11px',
+            borderRadius: 999,
+            background: 'var(--accent-bg)',
+            border: '1px solid var(--accent-border)',
+            marginBottom: 14,
+          }}
+        >
           <span
-            className="text-micro"
-            style={{ color: 'var(--text-tertiary)' }}
+            style={{
+              fontSize: 11,
+              fontWeight: 800,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: 'var(--accent)',
+            }}
           >
-            {t('triage_title')}
+            Question {currentQ + 1}
           </span>
         </div>
 
-        {/* Question */}
-        <div
+        {/* Question Card */}
+
+        <section
           style={{
-            padding: '20px',
+            padding: '24px',
             background: 'var(--bg-card)',
             border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-xl)',
+            borderRadius: 20,
             boxShadow: 'var(--shadow-sm)',
+            marginBottom: 24,
           }}
         >
-          <h2
+          <h1
             style={{
-              fontSize: 20,
-              fontWeight: 700,
+              margin: 0,
+              fontSize: 23,
+              fontWeight: 800,
               lineHeight: 1.35,
-              letterSpacing: '-0.015em',
+              letterSpacing: '-0.02em',
               color: 'var(--text-primary)',
             }}
           >
             {question.text}
-          </h2>
-        </div>
+          </h1>
 
-        {/* Answer options */}
-        <div className="flex flex-col gap-3 flex-1">
+          <p
+            style={{
+              margin: '10px 0 0',
+              fontSize: 13,
+              lineHeight: 1.5,
+              color: 'var(--text-secondary)',
+            }}
+          >
+            Select the option that best describes the situation.
+          </p>
+        </section>
+
+        {/* Answer Options */}
+
+        <section
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 12,
+          }}
+        >
           {question.options.map((option) => {
             const isSelected = selected === option.id;
+
             return (
               <button
                 key={option.id}
                 id={`opt-${question.id}-${option.id}`}
                 onClick={() => handleSelect(option)}
-                className={`triage-option ${isSelected ? 'selected' : ''}`}
+                aria-pressed={isSelected}
+                style={{
+                  width: '100%',
+                  minHeight: 72,
+
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 16,
+
+                  padding: '18px 18px',
+
+                  textAlign: 'left',
+
+                  background: isSelected
+                    ? 'var(--accent-bg)'
+                    : 'var(--bg-card)',
+
+                  border: isSelected
+                    ? '2px solid var(--accent)'
+                    : '1px solid var(--border)',
+
+                  borderRadius: 16,
+
+                  cursor: 'pointer',
+
+                  boxShadow: isSelected
+                    ? '0 6px 20px rgba(220, 38, 38, 0.12)'
+                    : 'var(--shadow-sm)',
+
+                  transform: isSelected
+                    ? 'translateY(-1px)'
+                    : 'translateY(0)',
+
+                  transition:
+                    'all 0.18s ease',
+
+                  WebkitTapHighlightColor: 'transparent',
+                }}
               >
-                {/* Radio dot */}
+                {/* Selection Indicator */}
+
                 <div
                   style={{
-                    width: 20,
-                    height: 20,
+                    width: 26,
+                    height: 26,
+
                     borderRadius: '50%',
-                    border: `2px solid ${isSelected ? 'var(--accent)' : 'var(--border-strong)'}`,
-                    background: isSelected ? 'var(--accent)' : 'transparent',
+
                     flexShrink: 0,
+
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    transition: 'all 0.15s ease',
+
+                    border: isSelected
+                      ? '2px solid var(--accent)'
+                      : '2px solid var(--border-strong)',
+
+                    background: isSelected
+                      ? 'var(--accent)'
+                      : 'transparent',
+
+                    transition: 'all 0.18s ease',
                   }}
                 >
                   {isSelected && (
-                    <div style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
-                      background: '#fff',
-                    }} />
+                    <Check
+                      size={16}
+                      color="#FFFFFF"
+                      strokeWidth={3}
+                    />
                   )}
                 </div>
+
+                {/* Option Text */}
+
                 <span
                   style={{
-                    fontSize: 15,
-                    fontWeight: isSelected ? 600 : 400,
-                    color: isSelected ? 'var(--accent)' : 'var(--text-primary)',
-                    lineHeight: 1.5,
+                    fontSize: 16,
+                    fontWeight: isSelected ? 700 : 500,
+                    lineHeight: 1.45,
+
+                    color: isSelected
+                      ? 'var(--text-primary)'
+                      : 'var(--text-primary)',
                   }}
                 >
                   {option.label}
@@ -173,41 +405,90 @@ export default function TriageFlow() {
               </button>
             );
           })}
-        </div>
+        </section>
+      </main>
 
-        {/* Notes input with mic */}
-        <div className="relative">
-          <input
-            className="sr-input"
-            placeholder="Additional notes (optional)..."
-            style={{ paddingRight: 44 }}
-            id="triage-notes"
-          />
-          <button
-            className="absolute right-3 top-1/2 -translate-y-1/2"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}
-            aria-label="Voice input"
-          >
-            <Mic size={18} color="var(--text-tertiary)" />
-          </button>
-        </div>
+      {/* ───────────────── Sticky Bottom Action ───────────────── */}
 
-        {/* Next button */}
-        <button
-          id="btn-triage-next"
-          className="btn-primary"
-          onClick={handleNext}
-          disabled={!selected}
+      <div
+        style={{
+          position: 'fixed',
+          left: 0,
+          right: 0,
+          bottom: 0,
+
+          zIndex: 30,
+
+          padding:
+            '14px 20px calc(14px + var(--safe-bottom, 0px))',
+
+          background: 'var(--bg-card)',
+
+          borderTop: '1px solid var(--border)',
+
+          boxShadow:
+            '0 -8px 24px rgba(0,0,0,0.08)',
+        }}
+      >
+        <div
           style={{
-            paddingTop: 18,
-            paddingBottom: 18,
-            opacity: selected ? 1 : 0.4,
-            cursor: selected ? 'pointer' : 'not-allowed',
+            maxWidth: 680,
+            margin: '0 auto',
           }}
         >
-          {isLast ? 'See Results →' : t('next')}
-        </button>
-      </main>
+          <button
+            id="btn-triage-next"
+            onClick={handleNext}
+            disabled={!selected}
+            style={{
+              width: '100%',
+              minHeight: 56,
+
+              border: 'none',
+              borderRadius: 14,
+
+              fontSize: 16,
+              fontWeight: 800,
+
+              color: '#FFFFFF',
+
+              background: selected
+                ? 'linear-gradient(135deg, #DC2626, #B91C1C)'
+                : 'var(--border)',
+
+              boxShadow: selected
+                ? '0 6px 18px rgba(220,38,38,0.28)'
+                : 'none',
+
+              cursor: selected
+                ? 'pointer'
+                : 'not-allowed',
+
+              transition:
+                'all 0.2s ease',
+
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            {isLast
+              ? 'View Emergency Assessment'
+              : 'Continue'}
+          </button>
+
+          {!selected && (
+            <p
+              style={{
+                margin: '8px 0 0',
+                textAlign: 'center',
+                fontSize: 11,
+                color: 'var(--text-tertiary)',
+              }}
+            >
+              Select an answer to continue
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

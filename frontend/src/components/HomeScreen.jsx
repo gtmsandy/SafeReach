@@ -412,13 +412,8 @@ export default function HomeScreen() {
         <main
           className="flex-1 flex flex-col px-5 pt-7"
           style={{
-            gap: 20,
-
-            /*
-             * Reserve only the space actually needed by
-             * the fixed SOS emergency dock.
-             */
-            paddingBottom: 105,
+            gap: 16,
+            paddingBottom: 24,
           }}
         >
           {/* Hero */}
@@ -522,7 +517,7 @@ export default function HomeScreen() {
             </section>
           )}
 
-          {/* Utility navigation */}
+          {/* Quick access */}
           <section>
             <div
               className="text-micro"
@@ -590,6 +585,9 @@ export default function HomeScreen() {
             </div>
           </section>
 
+          {/* Primary SOS action — directly after Quick Access */}
+          <SilentSOSButton country={country} />
+
           {/* Offline mode */}
           {!isOnline && (
             <div
@@ -647,9 +645,6 @@ export default function HomeScreen() {
             </div>
           )}
         </main>
-
-        {/* Fixed primary emergency dock */}
-        <SilentSOSButton country={country} />
       </div>
     </>
   );
