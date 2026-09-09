@@ -104,91 +104,19 @@ export default function ResultsScreen() {
   async function loadFacilities(result, lat, lng, countryCode) {
     try {
       let all = await getFacilitiesByCountry(countryCode);
-      
-      // 1. Database fallback chain if empty
+
+      // Database fallback chain if empty
       if (all.length === 0) {
-        console.info('[SafeReach Results] DB empty. Triggering force seed database...');
         await seedDatabase();
         all = await getFacilitiesByCountry(countryCode);
       }
-      
-      if (all.length === 0) {
-        // Grab any facilities from other countries to ensure something renders
-        console.info('[SafeReach Results] No facilities for selected country code. Fetching other countries...');
-        all = await db.facilities.toArray();
-      }
 
-      if (all.length === 0) {
-        // Complete block failure fallback
-        console.info('[SafeReach Results] Local IndexedDB completely empty. Injecting fallback mock hospital.');
-        all = [
-          {
-            id: 'mock-hospital',
-            name: 'Emergency Trauma Center (Offline Fallback)',
-            facility_type: 'hospital',
-            trauma_level: 1,
-            lat: lat || 23.8103,
-            lng: lng || 90.4125,
-            phone_primary: '999',
-            verified: true
-          }
-        ];
-      }
+      // Filter strictly by countryCode and category — no cross-country fallback, no mock data
+      const hospitals = all.filter((f) => ['hospital', 'trauma_center', 'clinic'].includes(f.facility_type));
+      const police = all.filter((f) => f.facility_type === 'police');
+      const assistance = all.filter((f) => ['towing', 'puncture_shop', 'ambulance'].includes(f.facility_type));
 
-      // 2. Separate by categories
-      let hospitals = all.filter(f => ['hospital', 'trauma_center', 'clinic'].includes(f.facility_type));
-      let police = all.filter(f => f.facility_type === 'police');
-      let assistance = all.filter(f => ['towing', 'puncture_shop'].includes(f.facility_type));
-
-      // Inject mock police stations if none exist for regional testing
-      if (police.length === 0) {
-        police = [
-          {
-            id: 'mock-police-1',
-            name: `${countryCode} National Police Station`,
-            facility_type: 'police',
-            lat: lat ? lat + 0.015 : 23.8203,
-            lng: lng ? lng - 0.012 : 90.4025,
-            phone_primary: '100',
-            verified: true
-          },
-          {
-            id: 'mock-police-2',
-            name: 'Highway Patrol Sector 4',
-            facility_type: 'police',
-            lat: lat ? lat - 0.008 : 23.7903,
-            lng: lng ? lng + 0.015 : 90.4225,
-            phone_primary: '100',
-            verified: true
-          }
-        ];
-      }
-
-      // Inject roadside assistance (towing/mechanic) if none exist in dataset
-      if (assistance.length === 0) {
-        assistance = [
-          {
-            id: 'mock-tow-1',
-            name: 'Highway Rapid Towing & Recovery',
-            facility_type: 'towing',
-            lat: lat ? lat - 0.012 : 23.8003,
-            lng: lng ? lng + 0.018 : 90.4225,
-            phone_primary: '+919999988888',
-            verified: true
-          },
-          {
-            id: 'mock-mech-1',
-            name: '24/7 Mobile Mechanic & Puncture Hub',
-            facility_type: 'puncture_shop',
-            lat: lat ? lat + 0.008 : 23.8183,
-            lng: lng ? lng - 0.005 : 90.4185,
-            phone_primary: '+918888877777',
-            verified: false
-          }
-        ];
-      }
-
-      // 3. Rank each category
+      // Rank each category
       if (lat && lng) {
         setMedicalFacilities(rankFacilities(hospitals, result.severity, lat, lng));
         setPoliceFacilities(rankFacilities(police, result.severity, lat, lng));
@@ -464,8 +392,65 @@ export default function ResultsScreen() {
               Finding nearby facilities...
             </div>
           ) : activeFacilities.length === 0 ? (
-            <div className="text-label text-center py-8" style={{ color: 'var(--text-tertiary)' }}>
-              {t('no_facilities_found')}
+            <div
+              id="empty-facilities-notice"
+              style={{
+                padding: '20px 16px',
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-xl)',
+                textAlign: 'center',
+                margin: '8px 0',
+              }}
+            >
+              <div style={{ fontSize: 26, marginBottom: 8 }}>🚨</div>
+              <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-primary)', marginBottom: 6 }}>
+                No verified {activeTab === 'medical' ? 'medical' : activeTab === 'police' ? 'police' : 'roadside assistance'} facilities in local dataset
+              </div>
+              <p
+                style={{
+                  fontSize: 12,
+                  color: 'var(--text-secondary)',
+                  lineHeight: 1.5,
+                  marginBottom: 14,
+                  maxWidth: 360,
+                  margin: '0 auto 14px',
+                }}
+              >
+                This does not mean no real facility exists. Connect directly with national emergency dispatch for urgent roadside assistance.
+              </p>
+              {countryInfo && (
+                <div className="flex gap-2 justify-center" style={{ flexWrap: 'wrap' }}>
+                  {(countryInfo.ambulance || countryInfo.unified) && (
+                    <a
+                      href={`tel:${countryInfo.ambulance || countryInfo.unified}`}
+                      className="btn-primary"
+                      style={{ padding: '8px 16px', fontSize: 13, textDecoration: 'none', borderRadius: 10 }}
+                    >
+                      🚑 Call {countryInfo.ambulance || countryInfo.unified}
+                    </a>
+                  )}
+                  {countryInfo.police && (
+                    <a
+                      href={`tel:${countryInfo.police}`}
+                      style={{
+                        padding: '8px 16px',
+                        fontSize: 13,
+                        textDecoration: 'none',
+                        borderRadius: 10,
+                        background: 'var(--bg-card)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--text-primary)',
+                        fontWeight: 700,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      👮 Call {countryInfo.police}
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <div className="flex flex-col gap-3">
