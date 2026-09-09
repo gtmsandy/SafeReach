@@ -16,15 +16,16 @@ import {
 import {
   triggerSilentSOS,
 } from '../logic/silentSOS';
+import {
+  getPrimaryContact,
+  addContact,
+  setPrimaryContact,
+  getContacts,
+  SOS_UPDATED_EVENT,
+} from '../logic/emergencyContacts';
 
 function getSavedContact() {
-  try {
-    return JSON.parse(
-      localStorage.getItem('sos_contact') || '{}'
-    );
-  } catch {
-    return {};
-  }
+  return getPrimaryContact() || {};
 }
 
 export default function SilentSOSButton({
@@ -58,31 +59,15 @@ export default function SilentSOSButton({
       setContact(getSavedContact());
     }
 
-    window.addEventListener(
-      'sos_contact_updated',
-      handleContactUpdate
-    );
-
-    window.addEventListener(
-      'storage',
-      handleContactUpdate
-    );
+    window.addEventListener(SOS_UPDATED_EVENT, handleContactUpdate);
+    window.addEventListener('storage', handleContactUpdate);
 
     return () => {
-      window.removeEventListener(
-        'sos_contact_updated',
-        handleContactUpdate
-      );
-
-      window.removeEventListener(
-        'storage',
-        handleContactUpdate
-      );
+      window.removeEventListener(SOS_UPDATED_EVENT, handleContactUpdate);
+      window.removeEventListener('storage', handleContactUpdate);
 
       if (animationRef.current) {
-        cancelAnimationFrame(
-          animationRef.current
-        );
+        cancelAnimationFrame(animationRef.current);
       }
     };
   }, []);
@@ -92,25 +77,25 @@ export default function SilentSOSButton({
       return;
     }
 
-    const saved = {
-      name: name.trim(),
-      phone: phone.trim(),
-    };
+    try {
+      const trimmedPhone = phone.trim();
+      const existing = getContacts().find((c) => c.phone === trimmedPhone);
+      if (existing) {
+        setPrimaryContact(existing.id);
+      } else {
+        addContact({
+          name: name.trim(),
+          phone: trimmedPhone,
+          relationship: 'Emergency Contact',
+        });
+      }
 
-    localStorage.setItem(
-      'sos_contact',
-      JSON.stringify(saved)
-    );
-
-    setContact(saved);
-
-    window.dispatchEvent(
-      new Event('sos_contact_updated')
-    );
-
-    setShowSetup(false);
-
-    triggerSilentSOS(country);
+      setContact(getSavedContact());
+      setShowSetup(false);
+      triggerSilentSOS(country);
+    } catch (err) {
+      console.error('[SafeReach] Save contact error:', err);
+    }
   }
 
   async function completeSOS() {
@@ -125,7 +110,7 @@ export default function SilentSOSButton({
 
     if (!saved.phone) {
       setName(saved.name || '');
-      setPhone(saved.phone || '');
+      setPhone('');
       setShowSetup(true);
 
       setTimeout(() => {
@@ -575,9 +560,9 @@ export default function SilentSOSButton({
                   'var(--text-secondary)',
               }}
             >
-              Your emergency contact will receive an SMS
-              with your location after emergency
-              assistance is triggered.
+              An emergency SMS containing your live location
+              will be prepared in your messaging app to send to
+              your primary contact.
             </div>
 
             {/* Inputs */}

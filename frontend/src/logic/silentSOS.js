@@ -13,14 +13,10 @@
  * Desktop browsers may not have applications associated with these protocols.
  */
 
+import { getPrimaryContact, normalizePhoneNumber } from './emergencyContacts.js';
+
 function getSavedContact() {
-  try {
-    return JSON.parse(
-      localStorage.getItem('sos_contact') || '{}'
-    );
-  } catch {
-    return {};
-  }
+  return getPrimaryContact() || {};
 }
 
 function getLocation() {
@@ -68,23 +64,18 @@ function buildEmergencyMessage(location) {
 
 function openEmergencyCall(number) {
   if (!number) return false;
-
-  window.location.href = `tel:${number}`;
+  const cleaned = String(number).trim().replace(/[^\d+]/g, '');
+  if (!cleaned) return false;
+  window.location.href = `tel:${cleaned}`;
   return true;
 }
 
 function openEmergencySMS(phone, message) {
   if (!phone) return false;
-
+  const check = normalizePhoneNumber(phone);
+  if (!check.valid) return false;
   const encodedMessage = encodeURIComponent(message);
-
-  /*
-   * Most modern mobile browsers support this format.
-   * The SMS application is responsible for sending the message.
-   */
-  window.location.href =
-    `sms:${phone}?body=${encodedMessage}`;
-
+  window.location.href = `sms:${check.normalized}?body=${encodedMessage}`;
   return true;
 }
 
@@ -126,50 +117,30 @@ export async function triggerSilentSOS(country) {
   const callTriggered =
     openEmergencyCall(emergencyNumber);
 
-  /*
-   * If an emergency contact exists, prepare the SMS.
-   *
-   * We use a delayed fallback because opening tel: can temporarily
-   * move the browser into the background on mobile devices.
-   */
-  if (contact.phone) {
+  const phoneCheck = contact.phone ? normalizePhoneNumber(contact.phone) : { valid: false };
+
+  if (phoneCheck.valid) {
     let smsOpened = false;
 
     const openSMSOnce = () => {
       if (smsOpened) return;
-
       smsOpened = true;
-
-      window.removeEventListener(
-        'focus',
-        handleFocus
-      );
-
-      openEmergencySMS(
-        contact.phone,
-        message
-      );
+      window.removeEventListener('focus', handleFocus);
+      openEmergencySMS(phoneCheck.normalized, message);
     };
 
     const handleFocus = () => {
-      // User has likely returned from the dialer.
       setTimeout(openSMSOnce, 400);
     };
 
-    window.addEventListener(
-      'focus',
-      handleFocus,
-      { once: true }
-    );
-
-    // Fallback for browsers where focus event is unreliable.
+    window.addEventListener('focus', handleFocus, { once: true });
     setTimeout(openSMSOnce, 2500);
   }
 
   return {
     success: callTriggered,
     callTriggered,
-    smsPrepared: Boolean(contact.phone),
+    smsPrepared: phoneCheck.valid,
     locationAvailable: Boolean(location),
   };
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -10,109 +10,72 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 
-const STORAGE_KEY = 'emergency_contacts';
-const SOS_STORAGE_KEY = 'sos_contact';
+import {
+  getContacts,
+  getPrimaryContact,
+  setPrimaryContact as setPrimaryContactLogic,
+  addContact as addContactLogic,
+  deleteContact as deleteContactLogic,
+  SOS_UPDATED_EVENT,
+} from '../logic/emergencyContacts';
 
 export default function EmergencyContacts() {
   const navigate = useNavigate();
 
-  const [contacts, setContacts] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    } catch {
-      return [];
-    }
-  });
-
+  const [contacts, setContacts] = useState(getContacts);
   const [primaryContactId, setPrimaryContactId] = useState(() => {
-    const savedSOS = JSON.parse(
-      localStorage.getItem(SOS_STORAGE_KEY) || '{}'
-    );
-
-    return savedSOS.id || null;
+    const primary = getPrimaryContact();
+    return primary ? primary.id : null;
   });
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [relationship, setRelationship] = useState('');
+  const [formError, setFormError] = useState('');
 
-  function saveContacts(updatedContacts) {
-    setContacts(updatedContacts);
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(updatedContacts)
-    );
-  }
+  useEffect(() => {
+    function syncFromStorage() {
+      setContacts(getContacts());
+      const primary = getPrimaryContact();
+      setPrimaryContactId(primary ? primary.id : null);
+    }
 
-  function setPrimaryContact(contact) {
-    const sosContact = {
-      id: contact.id,
-      name: contact.name,
-      phone: contact.phone,
-      relationship: contact.relationship,
+    window.addEventListener(SOS_UPDATED_EVENT, syncFromStorage);
+    window.addEventListener('storage', syncFromStorage);
+
+    return () => {
+      window.removeEventListener(SOS_UPDATED_EVENT, syncFromStorage);
+      window.removeEventListener('storage', syncFromStorage);
     };
-
-    localStorage.setItem(
-      SOS_STORAGE_KEY,
-      JSON.stringify(sosContact)
-    );
-
+  }, []);
+  function setPrimaryContact(contact) {
+    setPrimaryContactLogic(contact.id);
     setPrimaryContactId(contact.id);
   }
 
   function handleAddContact(e) {
     e.preventDefault();
+    setFormError('');
 
-    if (!name.trim() || !phone.trim()) return;
-
-    const newContact = {
-      id: Date.now(),
-      name: name.trim(),
-      phone: phone.trim(),
-      relationship:
-        relationship.trim() || 'Emergency Contact',
-    };
-
-    const updatedContacts = [
-      ...contacts,
-      newContact,
-    ];
-
-    saveContacts(updatedContacts);
-
-    // Automatically make the first contact
-    // the primary SOS contact
-    if (contacts.length === 0) {
-      setPrimaryContact(newContact);
+    try {
+      addContactLogic({ name, phone, relationship });
+      setName('');
+      setPhone('');
+      setRelationship('');
+      setContacts(getContacts());
+      const primary = getPrimaryContact();
+      setPrimaryContactId(primary ? primary.id : null);
+    } catch (err) {
+      setFormError(err.message || 'Failed to add contact');
     }
-
-    setName('');
-    setPhone('');
-    setRelationship('');
   }
 
   function handleDeleteContact(id) {
-    const deletedContact = contacts.find(
-      (contact) => contact.id === id
-    );
-
-    const updatedContacts = contacts.filter(
-      (contact) => contact.id !== id
-    );
-
-    saveContacts(updatedContacts);
-
-    // If deleted contact was primary SOS contact
-    if (deletedContact && id === primaryContactId) {
-      if (updatedContacts.length > 0) {
-        setPrimaryContact(updatedContacts[0]);
-      } else {
-        localStorage.removeItem(SOS_STORAGE_KEY);
-        setPrimaryContactId(null);
-      }
-    }
+    deleteContactLogic(id);
+    setContacts(getContacts());
+    const primary = getPrimaryContact();
+    setPrimaryContactId(primary ? primary.id : null);
   }
-
   function handleCall(phoneNumber) {
     window.location.href = `tel:${phoneNumber}`;
   }
@@ -268,7 +231,11 @@ export default function EmergencyContacts() {
                 onChange={(e) => setRelationship(e.target.value)}
                 style={inputStyle}
               />
-
+              {formError && (
+                <div style={{ color: 'var(--critical)', fontSize: 13, fontWeight: 600 }}>
+                  ⚠️ {formError}
+                </div>
+              )}
               <button
                 type="submit"
                 disabled={!name.trim() || !phone.trim()}
