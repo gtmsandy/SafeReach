@@ -28,6 +28,7 @@ import {
 
 import bimstecBounds from '../data/bimstec_bounds.json';
 import emergencyNumbers from '../data/emergency_numbers.json';
+import { getPrimaryContact, SOS_UPDATED_EVENT } from '../logic/emergencyContacts';
 
 export default function HomeScreen() {
   const navigate = useNavigate();
@@ -38,6 +39,7 @@ export default function HomeScreen() {
   const [crashVisible, setCrashVisible] = useState(false);
   const [tileProgress, setTileProgress] = useState(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [primaryContact, setPrimaryContact] = useState(getPrimaryContact);
 
   const voiceRef = useRef(null);
 
@@ -226,6 +228,20 @@ export default function HomeScreen() {
         'offline',
         onOffline
       );
+    };
+  }, []);
+
+  useEffect(() => {
+    function syncContact() {
+      setPrimaryContact(getPrimaryContact());
+    }
+
+    window.addEventListener(SOS_UPDATED_EVENT, syncContact);
+    window.addEventListener('storage', syncContact);
+
+    return () => {
+      window.removeEventListener(SOS_UPDATED_EVENT, syncContact);
+      window.removeEventListener('storage', syncContact);
     };
   }, []);
 
@@ -508,10 +524,10 @@ export default function HomeScreen() {
                 />
 
                 <QuickCallButton
-                  label={t('hospital')}
+                  label={t('unified_emergency') || 'Unified'}
                   number={emergency.unified}
-                  emoji="🏥"
-                  id="btn-call-hospital"
+                  emoji="🚨"
+                  id="btn-call-unified"
                 />
               </div>
             </section>
@@ -584,6 +600,82 @@ export default function HomeScreen() {
               />
             </div>
           </section>
+
+          {/* Emergency Contact Ready Status Card */}
+          <div
+            id="card-emergency-contact-ready"
+            onClick={() => navigate('/emergency-contacts')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '12px 14px',
+              background: primaryContact ? 'var(--stable-bg)' : 'var(--bg-elevated)',
+              border: `1px solid ${primaryContact ? 'var(--stable-border)' : 'var(--border)'}`,
+              borderRadius: 14,
+              cursor: 'pointer',
+              boxShadow: 'var(--shadow-xs)',
+              transition: 'all 0.15s ease',
+            }}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                navigate('/emergency-contacts');
+              }
+            }}
+            aria-label={
+              primaryContact
+                ? `Emergency contact ready: ${primaryContact.name}, ${primaryContact.phone}`
+                : 'Set up emergency contact'
+            }
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+              <div
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 9,
+                  background: primaryContact ? 'var(--stable)' : 'var(--text-tertiary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#fff',
+                  flexShrink: 0,
+                }}
+              >
+                <ShieldCheck size={18} />
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: primaryContact ? 'var(--stable-text)' : 'var(--text-primary)',
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {primaryContact ? 'Emergency Contact Ready' : 'Set Up Emergency Contact'}
+                </div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: 'var(--text-secondary)',
+                    marginTop: 2,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {primaryContact
+                    ? `${primaryContact.name} (${primaryContact.phone})`
+                    : 'Tap to configure for live SOS dispatch'}
+                </div>
+              </div>
+            </div>
+            <ChevronRight size={16} color="var(--text-tertiary)" style={{ flexShrink: 0 }} />
+          </div>
 
           {/* Primary SOS action — directly after Quick Access */}
           <SilentSOSButton country={country} />
@@ -661,10 +753,13 @@ function QuickCallButton({
       id={id}
       href={`tel:${number}`}
       className="call-btn"
+      aria-label={`${label}: ${number}`}
       style={{
         position: 'relative',
         overflow: 'hidden',
         paddingBottom: '30px',
+        minWidth: 0,
+        flex: 1,
       }}
     >
       <span
@@ -686,6 +781,7 @@ function QuickCallButton({
           letterSpacing: '-0.01em',
           lineHeight: 1,
           marginTop: 2,
+          whiteSpace: 'nowrap',
         }}
       >
         {number}
@@ -699,11 +795,14 @@ function QuickCallButton({
             'rgba(255,255,255,0.55)',
           textAlign: 'center',
           marginBottom: 2,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          maxWidth: '100%',
         }}
       >
         {label}
       </span>
-
       <div
         style={{
           position: 'absolute',
