@@ -17,6 +17,7 @@ import {
   getIncidents,
   deleteIncident,
 } from '../logic/offlineDB';
+import { syncTriageIncident, syncPendingIncidents, TRIAGE_SYNC_EVENT } from '../logic/triageSync';
 import emergencyNumbers from '../data/emergency_numbers.json';
 
 const SEVERITY_THEME = {
@@ -50,13 +51,23 @@ export default function AccidentHistory() {
 
   useEffect(() => {
     loadIncidents();
-  }, []);
 
+    function handleSyncUpdate() {
+      getIncidents().then((data) => setIncidents(data || [])).catch(() => {});
+    }
+    window.addEventListener(TRIAGE_SYNC_EVENT, handleSyncUpdate);
+    return () => {
+      window.removeEventListener(TRIAGE_SYNC_EVENT, handleSyncUpdate);
+    };
+  }, []);
   async function loadIncidents() {
     setLoading(true);
     try {
       const data = await getIncidents();
       setIncidents(data || []);
+      if (typeof navigator !== 'undefined' && navigator.onLine) {
+        syncPendingIncidents().catch(() => {});
+      }
     } catch (err) {
       console.error('[SafeReach] Failed to load incidents:', err);
     }
@@ -358,6 +369,83 @@ export default function AccidentHistory() {
                         </div>
                       )}
                     </div>
+
+                      {/* Sync Status Badge */}
+                      <div
+                        id={`sync-status-${incident.id}`}
+                        className="flex items-center gap-1"
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 600,
+                          color:
+                            incident.sync_status === 'synced'
+                              ? 'var(--stable)'
+                              : incident.sync_status === 'failed'
+                              ? 'var(--critical)'
+                              : 'var(--serious)',
+                        }}
+                      >
+                        {incident.sync_status === 'synced' ? (
+                          <>
+                            <span>☁️</span>
+                            <span>{t('synced') || 'Synced'}</span>
+                          </>
+                        ) : incident.sync_status === 'failed' ? (
+                          <>
+                            <span>⚠️</span>
+                            <span>{t('sync_failed') || 'Sync Failed'}</span>
+                            <button
+                              type="button"
+                              id={`btn-retry-sync-${incident.id}`}
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                await syncTriageIncident(incident);
+                                await loadIncidents();
+                              }}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: 'var(--accent-bright)',
+                                cursor: 'pointer',
+                                fontSize: 11,
+                                fontWeight: 700,
+                                textDecoration: 'underline',
+                                padding: 0,
+                                marginLeft: 4,
+                              }}
+                            >
+                              {t('retry') || 'Retry'}
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <span>⏳</span>
+                            <span>{t('pending_sync') || 'Pending Sync'}</span>
+                            <button
+                              type="button"
+                              id={`btn-retry-sync-${incident.id}`}
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                await syncTriageIncident(incident);
+                                await loadIncidents();
+                              }}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: 'var(--accent-bright)',
+                                cursor: 'pointer',
+                                fontSize: 11,
+                                fontWeight: 700,
+                                textDecoration: 'underline',
+                                padding: 0,
+                                marginLeft: 4,
+                              }}
+                            >
+                              {t('sync_now') || 'Sync Now'}
+                            </button>
+                          </>
+                        )}
+                      </div>
 
                     {/* Clinical Warning Tags (e.g. NO_MOVE) */}
                     {Array.isArray(incident.flags) && incident.flags.length > 0 && (

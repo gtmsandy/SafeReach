@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ChevronLeft, Check } from 'lucide-react';
 import { QUESTIONS, classify } from '../logic/triage';
 import { saveIncident, saveTriageSession } from '../logic/offlineDB';
+import { syncTriageIncident } from '../logic/triageSync';
 
 export default function TriageFlow() {
   const navigate = useNavigate();
@@ -37,14 +38,14 @@ export default function TriageFlow() {
       submittingRef.current = true;
 
       const result = classify(newResponses);
-      const country = localStorage.getItem('safereach_country') || 'BD';
+      const country = localStorage.getItem('safereach_country') || null;
 
       let summary = `${result.severity.charAt(0).toUpperCase() + result.severity.slice(1)} Trauma Assessment`;
       if (result.flags && result.flags.length > 0) {
         summary += ` · ${result.flags.join(', ')}`;
       }
 
-      await saveIncident({
+      const saved = await saveIncident({
         country_code: country,
         severity: result.severity,
         score: result.score,
@@ -57,6 +58,12 @@ export default function TriageFlow() {
       }).catch((err) => {
         console.warn('[SafeReach] Failed to save incident to vault:', err);
       });
+
+      if (saved && saved.id) {
+        syncTriageIncident(saved).catch((err) => {
+          console.warn('[SafeReach] Triage background sync deferred:', err);
+        });
+      }
 
       sessionStorage.setItem('triage_result', JSON.stringify(result));
       navigate('/results');

@@ -7,9 +7,11 @@ import './styles/theme.css';
 import './i18n';
 import { seedDatabase } from './logic/offlineDB';
 import { initTheme } from './logic/theme';
+import { initTriageSyncListener } from './logic/triageSync';
 
 seedDatabase();
 initTheme();
+initTriageSyncListener();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

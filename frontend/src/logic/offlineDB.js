@@ -19,6 +19,25 @@ db.version(2).stores({
   incidents:           '++id, severity, created_at, country_code',
 });
 
+db.version(3).stores({
+  incidents:           '++id, severity, created_at, country_code, sync_status, session_id',
+});
+
+/**
+ * Generate a random UUID string (standard v4)
+ * @returns {string}
+ */
+export function generateUUID() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 let _seeded = false;
 
 /**
@@ -104,6 +123,7 @@ export async function saveIncident(incident) {
   }
 
   const record = {
+    session_id: incident.session_id || generateUUID(),
     severity: String(incident.severity),
     score: typeof incident.score === 'number' ? incident.score : null,
     summary: (incident.summary || '').trim(),
@@ -113,11 +133,50 @@ export async function saveIncident(incident) {
     country_code: incident.country_code || null,
     location: incident.location || null, // Never fabricate coordinates
     was_offline: typeof incident.was_offline === 'boolean' ? incident.was_offline : true,
+    sync_status: incident.sync_status || 'pending',
+    synced_at: incident.synced_at || null,
+    sync_error: incident.sync_error || null,
+    backend_session_id: incident.backend_session_id || null,
     created_at: incident.created_at || new Date().toISOString(),
   };
 
   const id = await db.incidents.add(record);
   return { ...record, id };
+}
+
+/**
+ * Update incident synchronization status and metadata
+ * @param {number|string} id
+ * @param {'synced' | 'pending' | 'failed'} syncStatus
+ * @param {Object} [meta]
+ * @returns {Promise<number>}
+ */
+export async function updateIncidentSyncStatus(id, syncStatus, meta = {}) {
+  const updates = { sync_status: syncStatus };
+  if (meta.synced_at !== undefined) updates.synced_at = meta.synced_at;
+  if (meta.sync_error !== undefined) updates.sync_error = meta.sync_error;
+  if (meta.backend_session_id !== undefined) updates.backend_session_id = meta.backend_session_id;
+
+  try {
+    return await db.incidents.update(Number(id), updates);
+  } catch (err) {
+    console.error('[SafeReach DB] Failed to update incident sync status:', err);
+    return 0;
+  }
+}
+
+/**
+ * Get all pending or failed incidents eligible for synchronization
+ * @returns {Promise<Array>}
+ */
+export async function getPendingIncidents() {
+  try {
+    const all = await db.incidents.toArray();
+    return all.filter((inc) => inc.sync_status === 'pending' || inc.sync_status === 'failed' || !inc.sync_status);
+  } catch (err) {
+    console.error('[SafeReach DB] Failed to get pending incidents:', err);
+    return [];
+  }
 }
 
 /**
