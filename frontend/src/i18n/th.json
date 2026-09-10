@@ -96,5 +96,13 @@
   "filter_towing": "รถยก",
   "facilities_count": "{{count}} แห่ง",
   "no_facilities_in_category": "ไม่พบ{{category}}ในบริเวณนี้",
-  "no_verified_facilities_region": "ไม่มีสถานบริการฉุกเฉินที่ได้รับการยืนยันในภูมิภาคนี้"
+  "no_verified_facilities_region": "ไม่มีสถานบริการฉุกเฉินที่ได้รับการยืนยันในภูมิภาคนี้",
+  "theme": "ธีม",
+  "light": "สว่าง",
+  "dark": "มืด",
+  "switch_to_light": "เปลี่ยนเป็นธีมสว่าง",
+  "switch_to_dark": "เปลี่ยนเป็นธีมมืด",
+  "page_not_found": "ไม่พบหน้านี้",
+  "page_not_found_description": "หน้าที่คุณกำลังค้นหาไม่มีอยู่หรือถูกย้ายแล้ว",
+  "return_home": "กลับสู่หน้าหลัก"
 }

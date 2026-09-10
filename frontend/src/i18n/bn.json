@@ -96,5 +96,13 @@
   "filter_towing": "টোয়িং",
   "facilities_count": "{{count}}টি সুবিধা",
   "no_facilities_in_category": "এই অঞ্চলে কোনো {{category}} পাওয়া যায়নি।",
-  "no_verified_facilities_region": "এই অঞ্চলের জন্য কোনো যাচাইকৃত জরুরি সুবিধা উপলব্ধ নেই।"
+  "no_verified_facilities_region": "এই অঞ্চলের জন্য কোনো যাচাইকৃত জরুরি সুবিধা উপলব্ধ নেই।",
+  "theme": "থিম",
+  "light": "লাইট",
+  "dark": "ডার্ক",
+  "switch_to_light": "লাইট থিমে পরিবর্তন করুন",
+  "switch_to_dark": "ডার্ক থিমে পরিবর্তন করুন",
+  "page_not_found": "পৃষ্ঠাটি পাওয়া যায়নি",
+  "page_not_found_description": "আপনি যে পৃষ্ঠাটি খুঁজছেন তা বিদ্যমান নেই বা সরানো হয়েছে।",
+  "return_home": "হোমে ফিরে যান"
 }

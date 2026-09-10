@@ -87,6 +87,67 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+:root.dark,
+:root[data-theme="dark"],
+.dark {
+  /* ─── App Shell ──────────────────────────────────────────────────── */
+  --shell: #060D17;           /* deep midnight navy */
+  --shell-mid: #0B1626;
+
+  /* ─── Primary surfaces ──────────────────────────────────────────── */
+  --bg-primary: #0A1628;      /* deep navy — screen background */
+  --bg-card: #0F2038;         /* elevated dark card surface */
+  --bg-elevated: #162B48;     /* interactive / secondary surface */
+  --bg-inset: #091322;        /* sunken well surface */
+
+  /* ─── Severity — high contrast on dark, not blinding ───────────── */
+  --critical: #E05244;
+  --critical-bg: rgba(224, 82, 68, 0.18);
+  --critical-border: rgba(224, 82, 68, 0.40);
+  --critical-text: #FCA5A5;
+
+  --serious: #F59E0B;
+  --serious-bg: rgba(245, 158, 11, 0.18);
+  --serious-border: rgba(245, 158, 11, 0.40);
+  --serious-text: #FDE68A;
+
+  --stable: #22C55E;
+  --stable-bg: rgba(34, 197, 94, 0.18);
+  --stable-border: rgba(34, 197, 94, 0.40);
+  --stable-text: #86EFAC;
+
+  /* ─── UI chrome ─────────────────────────────────────────────────── */
+  --accent: #2563EB;
+  --accent-mid: #3B82F6;
+  --accent-bright: #60A5FA;
+  --accent-light: rgba(37, 99, 168, 0.28);
+  --accent-glow: rgba(96, 165, 250, 0.20);
+
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-tertiary: #64748B;
+  --text-inverse: #FFFFFF;
+
+  --border: #1E3A5F;
+  --border-strong: #2D5282;
+  --border-subtle: #152942;
+
+  /* ─── Shadow system ─────────────────────────────────────────────── */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.55), 0 1px 4px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.65), 0 2px 8px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.75), 0 4px 16px rgba(0, 0, 0, 0.6);
+  --shadow-accent: 0 4px 20px rgba(37, 99, 235, 0.40);
+  --shadow-critical: 0 4px 20px rgba(224, 82, 68, 0.35);
+
+  /* ─── Glass tokens ──────────────────────────────────────────────── */
+  --glass-bg: rgba(15, 32, 56, 0.88);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-dark-bg: rgba(6, 13, 23, 0.90);
+  --glass-dark-border: rgba(255, 255, 255, 0.08);
+}
+
 /* ══════════════════════════════════════════════════════════════════════
    RESET
 ══════════════════════════════════════════════════════════════════════ */
@@ -431,6 +492,8 @@ body {
 }
 
 .leaflet-popup-content-wrapper {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border);
@@ -438,8 +501,19 @@ body {
 
 .leaflet-popup-tip {
   box-shadow: none;
+  background: var(--bg-card) !important;
 }
 
+.leaflet-bar a {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.leaflet-bar a:hover {
+  background: var(--bg-elevated) !important;
+  color: var(--text-primary) !important;
+}
 /* ══════════════════════════════════════════════════════════════════════
    BOTTOM SHEET
 ══════════════════════════════════════════════════════════════════════ */

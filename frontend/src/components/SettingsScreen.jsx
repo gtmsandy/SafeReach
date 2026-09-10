@@ -14,6 +14,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Trash2,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 import { LANGUAGES } from '../i18n/index.js';
@@ -33,6 +35,8 @@ import {
 import bimstecBounds from '../data/bimstec_bounds.json';
 import emergencyNumbers from '../data/emergency_numbers.json';
 
+import ThemeToggle from './ThemeToggle';
+import { getInitialTheme, THEME_CHANGE_EVENT } from '../logic/theme';
 const APP_VERSION = '2.0.0';
 
 export default function SettingsScreen() {
@@ -68,6 +72,23 @@ export default function SettingsScreen() {
   );
 
   const [motionPermission, setMotionPermission] = useState('unknown');
+
+  // ─────────────────────────────────────────
+  // Theme
+  // ─────────────────────────────────────────
+  const [theme, setSettingsTheme] = useState(getInitialTheme);
+
+  useEffect(() => {
+    function handleThemeChange(e) {
+      setSettingsTheme(e.detail?.theme || getInitialTheme());
+    }
+    window.addEventListener(THEME_CHANGE_EVENT, handleThemeChange);
+    window.addEventListener('storage', handleThemeChange);
+    return () => {
+      window.removeEventListener(THEME_CHANGE_EVENT, handleThemeChange);
+      window.removeEventListener('storage', handleThemeChange);
+    };
+  }, []);
 
   // ─────────────────────────────────────────
   // Offline Data
@@ -751,7 +772,19 @@ export default function SettingsScreen() {
 
 
         {/* ─────────────────────────────
-            Section 3: Language
+            Section 3: Theme / Appearance
+        ───────────────────────────── */}
+
+        <SettingsSection
+          icon={theme === 'dark' ? <Moon size={17} /> : <Sun size={17} />}
+          title={t('theme')}
+          hint={theme === 'dark' ? t('dark') : t('light')}
+        >
+          <ThemeToggle theme={theme} onThemeChange={setSettingsTheme} />
+        </SettingsSection>
+
+        {/* ─────────────────────────────
+            Section 4: Language
         ───────────────────────────── */}
 
         <SettingsSection

@@ -6,8 +6,10 @@ import 'leaflet/dist/leaflet.css';
 import './styles/theme.css';
 import './i18n';
 import { seedDatabase } from './logic/offlineDB';
+import { initTheme } from './logic/theme';
 
 seedDatabase();
+initTheme();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

@@ -96,5 +96,13 @@
   "filter_towing": "टोइङ",
   "facilities_count": "{{count}} सुविधाहरू",
   "no_facilities_in_category": "यस क्षेत्रमा कुनै {{category}} फेला परेन।",
-  "no_verified_facilities_region": "यस क्षेत्रका लागि कुनै प्रमाणित आपतकालीन सुविधाहरू उपलब्ध छैनन्।"
+  "no_verified_facilities_region": "यस क्षेत्रका लागि कुनै प्रमाणित आपतकालीन सुविधाहरू उपलब्ध छैनन्।",
+  "theme": "थिम",
+  "light": "लाइट",
+  "dark": "डार्क",
+  "switch_to_light": "लाइट थिममा परिवर्तन गर्नुहोस्",
+  "switch_to_dark": "डार्क थिममा परिवर्तन गर्नुहोस्",
+  "page_not_found": "पृष्ठ फेला परेन",
+  "page_not_found_description": "तपाईंले खोजिरहनुभएको पृष्ठ अवस्थित छैन वा सारिएको छ।",
+  "return_home": "गृहपृष्ठमा फर्कनुहोस्"
 }

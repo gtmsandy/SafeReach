@@ -96,5 +96,13 @@
   "filter_towing": "Towing",
   "facilities_count": "{{count}} facilities",
   "no_facilities_in_category": "No {{category}} found in this region.",
-  "no_verified_facilities_region": "No verified emergency facilities available for this region."
+  "no_verified_facilities_region": "No verified emergency facilities available for this region.",
+  "theme": "Theme",
+  "light": "Light",
+  "dark": "Dark",
+  "switch_to_light": "Switch to light theme",
+  "switch_to_dark": "Switch to dark theme",
+  "page_not_found": "Page Not Found",
+  "page_not_found_description": "The page you are looking for does not exist or has been moved.",
+  "return_home": "Return Home"
 }
