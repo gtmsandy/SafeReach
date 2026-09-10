@@ -7,7 +7,7 @@ import MapView from './components/MapView';
 import CountrySelector from './components/CountrySelector';
 import SettingsScreen from './components/SettingsScreen';
 import EmergencyContacts from './components/EmergencyContacts';
-
+import AccidentHistory from './components/AccidentHistory';
 export default function App() {
   return (
     <Routes>
@@ -19,6 +19,7 @@ export default function App() {
       <Route path="/countries" element={<CountrySelector />} />
       <Route path="/settings" element={<SettingsScreen />} />
       <Route path="/emergency-contacts" element={<EmergencyContacts />} />
+      <Route path="/history" element={<AccidentHistory />} />
     </Routes>
   );
 }

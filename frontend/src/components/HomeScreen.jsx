@@ -10,6 +10,7 @@ import {
   Building2,
   Users,
   ChevronRight,
+  Clock,
 } from 'lucide-react';
 
 import SilentSOSButton from './SilentSOSButton';
@@ -358,6 +359,31 @@ export default function HomeScreen() {
             <span className="offline-pill">
               {t('offline_ready')}
             </span>
+            <button
+              onClick={() =>
+                navigate('/history')
+              }
+              className="touch-target flex items-center justify-center"
+              style={{
+                width: 38,
+                height: 38,
+                background:
+                  'var(--bg-elevated)',
+                border:
+                  '1px solid var(--border)',
+                borderRadius: '50%',
+                cursor: 'pointer',
+                boxShadow: 'var(--shadow-xs)',
+              }}
+              aria-label={t('accident_history') || 'Accident History'}
+              id="btn-history"
+              title={t('accident_history') || 'Accident History'}
+            >
+              <Clock
+                size={18}
+                color="var(--text-secondary)"
+              />
+            </button>
 
             <button
               onClick={() =>

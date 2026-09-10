@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, Check } from 'lucide-react';
 import { QUESTIONS, classify } from '../logic/triage';
-import { saveTriageSession } from '../logic/offlineDB';
+import { saveIncident, saveTriageSession } from '../logic/offlineDB';
 
 export default function TriageFlow() {
   const navigate = useNavigate();
@@ -12,7 +12,7 @@ export default function TriageFlow() {
   const [currentQ, setCurrentQ] = useState(0);
   const [responses, setResponses] = useState([]);
   const [selected, setSelected] = useState(null);
-
+  const submittingRef = useRef(false);
   const question = QUESTIONS[currentQ];
   const isLast = currentQ === QUESTIONS.length - 1;
   const progress = ((currentQ + 1) / QUESTIONS.length) * 100;
@@ -33,22 +33,32 @@ export default function TriageFlow() {
     ];
 
     if (isLast) {
+      if (submittingRef.current) return;
+      submittingRef.current = true;
+
       const result = classify(newResponses);
+      const country = localStorage.getItem('safereach_country') || 'BD';
 
-      const country =
-        localStorage.getItem('safereach_country') || 'BD';
+      let summary = `${result.severity.charAt(0).toUpperCase() + result.severity.slice(1)} Trauma Assessment`;
+      if (result.flags && result.flags.length > 0) {
+        summary += ` · ${result.flags.join(', ')}`;
+      }
 
-      await saveTriageSession({
+      await saveIncident({
         country_code: country,
         severity: result.severity,
+        score: result.score,
+        summary,
+        first_aid_id: result.first_aid_id,
+        flags: result.flags,
+        responses: newResponses,
         was_offline: !navigator.onLine,
-      }).catch(() => {});
+        location: null,
+      }).catch((err) => {
+        console.warn('[SafeReach] Failed to save incident to vault:', err);
+      });
 
-      sessionStorage.setItem(
-        'triage_result',
-        JSON.stringify(result)
-      );
-
+      sessionStorage.setItem('triage_result', JSON.stringify(result));
       navigate('/results');
       return;
     }

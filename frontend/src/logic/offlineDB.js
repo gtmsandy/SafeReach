@@ -15,6 +15,10 @@ db.version(1).stores({
   sync_meta:           'key',
 });
 
+db.version(2).stores({
+  incidents:           '++id, severity, created_at, country_code',
+});
+
 let _seeded = false;
 
 /**
@@ -90,14 +94,79 @@ export async function getAllProtocols() {
 }
 
 /**
- * Save a triage session
+ * Save a completed incident to the local incident vault
+ * @param {Object} incident
+ * @returns {Promise<Object>}
+ */
+export async function saveIncident(incident) {
+  if (!incident || !incident.severity) {
+    throw new Error('Incident severity is required');
+  }
+
+  const record = {
+    severity: String(incident.severity),
+    score: typeof incident.score === 'number' ? incident.score : null,
+    summary: (incident.summary || '').trim(),
+    first_aid_id: incident.first_aid_id || null,
+    flags: Array.isArray(incident.flags) ? incident.flags : [],
+    responses: Array.isArray(incident.responses) ? incident.responses : [],
+    country_code: incident.country_code || null,
+    location: incident.location || null, // Never fabricate coordinates
+    was_offline: typeof incident.was_offline === 'boolean' ? incident.was_offline : true,
+    created_at: incident.created_at || new Date().toISOString(),
+  };
+
+  const id = await db.incidents.add(record);
+  return { ...record, id };
+}
+
+/**
+ * Save a triage session (delegates to saveIncident and records in triage_sessions)
  * @param {Object} session
  */
 export async function saveTriageSession(session) {
-  return db.triage_sessions.add({
-    ...session,
-    created_at: new Date().toISOString(),
-  });
+  try {
+    await db.triage_sessions.add({
+      country_code: session.country_code,
+      severity: session.severity,
+      was_offline: session.was_offline,
+      created_at: new Date().toISOString(),
+    });
+  } catch {}
+  return saveIncident(session);
+}
+
+/**
+ * Retrieve all incidents from the local vault, newest first
+ * Strictly based on the incidents store.
+ * @returns {Promise<Array>}
+ */
+export async function getIncidents() {
+  try {
+    return await db.incidents.orderBy('id').reverse().toArray();
+  } catch (err) {
+    console.error('[SafeReach DB] Error loading incidents:', err);
+    return [];
+  }
+}
+
+/**
+ * Retrieve a single incident by ID
+ * @param {number|string} id
+ * @returns {Promise<Object|null>}
+ */
+export async function getIncidentById(id) {
+  return db.incidents.get(Number(id));
+}
+
+/**
+ * Delete an individual incident from the local vault
+ * @param {number|string} id
+ * @returns {Promise<boolean>}
+ */
+export async function deleteIncident(id) {
+  await db.incidents.delete(Number(id));
+  return true;
 }
 
 /**
