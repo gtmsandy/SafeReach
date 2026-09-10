@@ -89,5 +89,12 @@
   "confirm_delete_incident": "के तपाईं यो दुर्घटना रेकर्ड मेटाउन निश्चित हुनुहुन्छ?",
   "saved_locally": "स्थानीय रूपमा सुरक्षित",
   "start_triage": "ट्राइज सुरु गर्नुहोस्",
-  "recorded_responses": "रेकर्ड गरिएका उत्तरहरू"
+  "recorded_responses": "रेकर्ड गरिएका उत्तरहरू",
+  "filter_all": "सबै",
+  "filter_hospitals": "अस्पतालहरू",
+  "filter_police": "प्रहरी",
+  "filter_towing": "टोइङ",
+  "facilities_count": "{{count}} सुविधाहरू",
+  "no_facilities_in_category": "यस क्षेत्रमा कुनै {{category}} फेला परेन।",
+  "no_verified_facilities_region": "यस क्षेत्रका लागि कुनै प्रमाणित आपतकालीन सुविधाहरू उपलब्ध छैनन्।"
 }

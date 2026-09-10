@@ -89,5 +89,12 @@
   "confirm_delete_incident": "Are you sure you want to delete this incident record?",
   "saved_locally": "Saved Locally",
   "start_triage": "Start Triage",
-  "recorded_responses": "Recorded Responses"
+  "recorded_responses": "Recorded Responses",
+  "filter_all": "All",
+  "filter_hospitals": "Hospitals",
+  "filter_police": "Police",
+  "filter_towing": "Towing",
+  "facilities_count": "{{count}} facilities",
+  "no_facilities_in_category": "No {{category}} found in this region.",
+  "no_verified_facilities_region": "No verified emergency facilities available for this region."
 }

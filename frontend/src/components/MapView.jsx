@@ -1,10 +1,12 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { ChevronLeft, WifiOff } from 'lucide-react';
+import { ChevronLeft, WifiOff, MapPin, Navigation } from 'lucide-react';
 import { getFacilitiesByCountry } from '../logic/offlineDB';
+import { haversine } from '../logic/haversine';
+import { filterFacilities, getFilterCounts } from '../logic/mapFiltering';
 import bimstecBounds from '../data/bimstec_bounds.json';
 
 // Fix Leaflet default marker icon issue with Vite
@@ -73,10 +75,10 @@ export default function MapView() {
   const { t } = useTranslation();
 
   const [facilities, setFacilities] = useState([]);
+  const [selectedFilter, setSelectedFilter] = useState('all');
   const [userPos, setUserPos] = useState(null);
   const [tileError, setTileError] = useState(false);
   const [center, setCenter] = useState([23.8103, 90.4125]); // Default Dhaka
-
   useEffect(() => {
     const countryCode = localStorage.getItem('safereach_country') || 'BD';
     getFacilitiesByCountry(countryCode).then(setFacilities);
@@ -118,6 +120,24 @@ export default function MapView() {
       { timeout: 8000 }
     );
   }, []);
+
+  const FILTER_OPTIONS = [
+    { id: 'all', label: t('filter_all') || 'All', emoji: '🌐' },
+    { id: 'hospital', label: t('filter_hospitals') || 'Hospitals', emoji: '🏥' },
+    { id: 'police', label: t('filter_police') || 'Police', emoji: '👮' },
+    { id: 'towing', label: t('filter_towing') || 'Towing', emoji: '🚗' },
+  ];
+  const counts = useMemo(() => getFilterCounts(facilities), [facilities]);
+
+
+  const filteredFacilities = useMemo(() => {
+    return filterFacilities(facilities, selectedFilter);
+  }, [facilities, selectedFilter]);
+
+  const currentFilterLabel = useMemo(() => {
+    const opt = FILTER_OPTIONS.find((o) => o.id === selectedFilter);
+    return opt ? opt.label : 'Facilities';
+  }, [selectedFilter, t]);
 
   return (
     <div className="screen">
@@ -167,12 +187,12 @@ export default function MapView() {
         </div>
       )}
 
-      {/* ── Legend strip — Pure CSS Flexbox ── */}
+      {/* ── Facility Filter Bar ── */}
       <div
         style={{
           display: 'flex',
           gap: '8px',
-          padding: '12px 16px',
+          padding: '10px 16px',
           overflowX: 'auto',
           borderBottom: '1px solid var(--border)',
           background: 'var(--bg-card)',
@@ -180,43 +200,130 @@ export default function MapView() {
           msOverflowStyle: 'none',
           WebkitOverflowScrolling: 'touch',
         }}
+        role="toolbar"
+        aria-label="Filter emergency facilities"
       >
-        {LEGEND_ITEMS.map(({ type, color, emoji, label }) => (
+        {FILTER_OPTIONS.map((opt) => {
+          const isSelected = selectedFilter === opt.id;
+          const count = counts[opt.id] ?? 0;
+          return (
+            <button
+              key={opt.id}
+              id={`btn-filter-${opt.id}`}
+              onClick={() => setSelectedFilter(opt.id)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                flexShrink: 0,
+                minHeight: '44px',
+                padding: '8px 14px',
+                borderRadius: '999px',
+                border: `1.5px solid ${isSelected ? 'var(--accent)' : 'var(--border)'}`,
+                background: isSelected ? 'var(--accent)' : 'var(--bg-elevated)',
+                color: isSelected ? '#FFFFFF' : 'var(--text-secondary)',
+                fontWeight: isSelected ? 700 : 600,
+                fontSize: 13,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              role="button"
+              aria-pressed={isSelected}
+              aria-label={`${opt.label}: ${count} facilities`}
+            >
+              <span>{opt.emoji}</span>
+              <span>{opt.label}</span>
+              <span
+                style={{
+                  fontSize: 11,
+                  padding: '2px 7px',
+                  borderRadius: 999,
+                  background: isSelected ? 'rgba(255,255,255,0.25)' : 'var(--border)',
+                  color: isSelected ? '#FFFFFF' : 'var(--text-tertiary)',
+                  fontWeight: 700,
+                }}
+              >
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── Active Facility Status Subbar ── */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '6px 16px',
+          background: 'var(--bg-elevated)',
+          borderBottom: '1px solid var(--border)',
+          fontSize: 12,
+          color: 'var(--text-secondary)',
+          fontWeight: 600,
+        }}
+      >
+        <span>
+          {currentFilterLabel}: {filteredFacilities.length} {t('facilities') || 'facilities'}
+        </span>
+        {userPos && (
+          <span style={{ fontSize: 11, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 3 }}>
+            <MapPin size={12} />
+            GPS Active
+          </span>
+        )}
+      </div>
+      {/* ── Map Canvas ── */}
+      <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
+        {/* Empty state notice for zero facilities */}
+        {filteredFacilities.length === 0 && (
           <div
-            key={type}
+            id="map-empty-state"
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              flexShrink: 0,
-              background: 'var(--bg-elevated)',
+              position: 'absolute',
+              top: 14,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 1000,
+              background: 'var(--bg-card)',
               border: '1px solid var(--border)',
-              borderRadius: '999px',
-              padding: '6px 12px',
+              boxShadow: 'var(--shadow-md)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '10px 18px',
+              maxWidth: '90%',
+              textAlign: 'center',
+              pointerEvents: 'none',
+              animation: 'scaleIn 0.2s ease',
             }}
+            role="status"
+            aria-live="polite"
           >
             <div
               style={{
-                width: 9,
-                height: 9,
-                borderRadius: '50%',
-                background: color,
-                flexShrink: 0,
+                fontSize: 13,
+                fontWeight: 700,
+                color: 'var(--text-primary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
               }}
-            />
-            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-              {label}
-            </span>
+            >
+              <span>{facilities.length === 0 ? '🚨' : '⚠️'}</span>
+              <span>
+                {facilities.length === 0
+                  ? (t('no_verified_facilities_region') || 'No verified emergency facilities available for this region.')
+                  : (t('no_facilities_in_category', { category: currentFilterLabel }) || `No ${currentFilterLabel.toLowerCase()} found in this region.`)}
+              </span>
+            </div>
           </div>
-        ))}
-      </div>
+        )}
 
-      {/* ── Map ── */}
-      <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
         <MapContainer
           center={center}
           zoom={13}
-          style={{ height: 'calc(100vh - 110px - var(--safe-top))', width: '100%' }}
+          style={{ height: 'calc(100vh - 150px - var(--safe-top))', width: '100%' }}
           id="leaflet-map"
         >
           <TileLayer
@@ -247,45 +354,78 @@ export default function MapView() {
             </Marker>
           )}
 
-          {/* Facility markers */}
-          {facilities.map((facility) => (
-            <Marker
-              key={facility.id}
-              position={[facility.lat, facility.lng]}
-              icon={createColoredIcon(TYPE_COLORS[facility.facility_type] || '#64748B')}
-            >
-              <Popup>
-                <div style={{ minWidth: 180, fontFamily: 'var(--font)' }}>
-                  <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, color: 'var(--text-primary)' }}>
-                    {facility.name}
+          {/* Filtered Facility markers */}
+          {filteredFacilities.map((facility) => {
+            const dist =
+              userPos && facility.lat && facility.lng
+                ? Math.round(haversine(userPos.lat, userPos.lng, facility.lat, facility.lng) * 10) / 10
+                : null;
+            return (
+              <Marker
+                key={facility.id}
+                position={[facility.lat, facility.lng]}
+                icon={createColoredIcon(TYPE_COLORS[facility.facility_type] || '#64748B')}
+              >
+                <Popup>
+                  <div style={{ minWidth: 180, fontFamily: 'var(--font)' }}>
+                    <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 2, color: 'var(--text-primary)' }}>
+                      {facility.name}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: dist ? 4 : 8 }}>
+                      {facility.facility_type.replace(/_/g, ' ')}
+                      {facility.trauma_level ? ` · Level ${facility.trauma_level}` : ''}
+                    </div>
+                    {dist !== null && (
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent-bright)', marginBottom: 8 }}>
+                        📍 {dist} km away
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {facility.phone_primary && (
+                        <a
+                          href={`tel:${facility.phone_primary}`}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 5,
+                            background: 'linear-gradient(135deg, var(--accent), var(--accent-bright))',
+                            color: '#fff',
+                            borderRadius: 8,
+                            padding: '6px 10px',
+                            fontSize: 12,
+                            fontWeight: 700,
+                            textDecoration: 'none',
+                          }}
+                        >
+                          📞 Call
+                        </a>
+                      )}
+                      <a
+                        href={`https://maps.google.com/?q=${facility.lat},${facility.lng}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          background: 'var(--bg-elevated)',
+                          border: '1px solid var(--border)',
+                          color: 'var(--text-primary)',
+                          borderRadius: 8,
+                          padding: '6px 10px',
+                          fontSize: 12,
+                          fontWeight: 600,
+                          textDecoration: 'none',
+                        }}
+                      >
+                        🧭 Directions
+                      </a>
+                    </div>
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 10 }}>
-                    {facility.facility_type.replace(/_/g, ' ')}
-                    {facility.trauma_level ? ` · Level ${facility.trauma_level}` : ''}
-                  </div>
-                  {facility.phone_primary && (
-                    <a
-                      href={`tel:${facility.phone_primary}`}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 5,
-                        background: 'linear-gradient(135deg, var(--accent), var(--accent-bright))',
-                        color: '#fff',
-                        borderRadius: 8,
-                        padding: '7px 12px',
-                        fontSize: 13,
-                        fontWeight: 700,
-                        textDecoration: 'none',
-                      }}
-                    >
-                      📞 {facility.phone_primary}
-                    </a>
-                  )}
-                </div>
-              </Popup>
-            </Marker>
-          ))}
+                </Popup>
+              </Marker>
+            );
+          })}
         </MapContainer>
       </div>
     </div>

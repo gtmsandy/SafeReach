@@ -89,5 +89,12 @@
   "confirm_delete_incident": "คุณแน่ใจหรือไม่ว่าต้องการลบบันทึกอุบัติเหตุนี้?",
   "saved_locally": "บันทึกในเครื่อง",
   "start_triage": "เริ่มการคัดกรอง",
-  "recorded_responses": "คำตอบที่บันทึกไว้"
+  "recorded_responses": "คำตอบที่บันทึกไว้",
+  "filter_all": "ทั้งหมด",
+  "filter_hospitals": "โรงพยาบาล",
+  "filter_police": "ตำรวจ",
+  "filter_towing": "รถยก",
+  "facilities_count": "{{count}} แห่ง",
+  "no_facilities_in_category": "ไม่พบ{{category}}ในบริเวณนี้",
+  "no_verified_facilities_region": "ไม่มีสถานบริการฉุกเฉินที่ได้รับการยืนยันในภูมิภาคนี้"
 }
