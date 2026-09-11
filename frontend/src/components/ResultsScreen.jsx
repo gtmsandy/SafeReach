@@ -420,34 +420,87 @@ export default function ResultsScreen() {
                 This does not mean no real facility exists. Connect directly with national emergency dispatch for urgent roadside assistance.
               </p>
               {countryInfo && (
-                <div className="flex gap-2 justify-center" style={{ flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 4 }}>
                   {(countryInfo.ambulance || countryInfo.unified) && (
-                    <a
-                      href={`tel:${countryInfo.ambulance || countryInfo.unified}`}
-                      className="btn-primary"
-                      style={{ padding: '8px 16px', fontSize: 13, textDecoration: 'none', borderRadius: 10 }}
-                    >
-                      🚑 Call {countryInfo.ambulance || countryInfo.unified}
-                    </a>
-                  )}
-                  {countryInfo.police && (
-                    <a
-                      href={`tel:${countryInfo.police}`}
+                    <div
                       style={{
-                        padding: '8px 16px',
-                        fontSize: 13,
-                        textDecoration: 'none',
-                        borderRadius: 10,
                         background: 'var(--bg-card)',
                         border: '1px solid var(--border)',
-                        color: 'var(--text-primary)',
-                        fontWeight: 700,
-                        display: 'inline-flex',
-                        alignItems: 'center',
+                        borderRadius: 'var(--radius-xl)',
+                        padding: '14px 16px',
+                        textAlign: 'center',
                       }}
                     >
-                      👮 Call {countryInfo.police}
-                    </a>
+                      <div
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.07em',
+                          color: 'var(--text-tertiary)',
+                          marginBottom: 10,
+                        }}
+                      >
+                        🏥 Nearest Medical
+                      </div>
+                      <a
+                        href={`tel:${countryInfo.ambulance || countryInfo.unified}`}
+                        className="btn-primary"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          textDecoration: 'none',
+                          fontSize: 15,
+                          fontWeight: 800,
+                          padding: '12px 20px',
+                        }}
+                      >
+                        🚑 Call {countryInfo.ambulance || countryInfo.unified}
+                      </a>
+                    </div>
+                  )}
+                  {countryInfo.police && (
+                    <div
+                      style={{
+                        background: 'var(--bg-card)',
+                        border: '1px solid var(--border)',
+                        borderRadius: 'var(--radius-xl)',
+                        padding: '14px 16px',
+                        textAlign: 'center',
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.07em',
+                          color: 'var(--text-tertiary)',
+                          marginBottom: 10,
+                        }}
+                      >
+                        👮 Police
+                      </div>
+                      <a
+                        href={`tel:${countryInfo.police}`}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          textDecoration: 'none',
+                          fontSize: 15,
+                          fontWeight: 800,
+                          padding: '12px 20px',
+                          borderRadius: 'var(--radius-lg)',
+                          background: '#1E3A8A',
+                          color: '#FFFFFF',
+                          border: 'none',
+                        }}
+                      >
+                        👮 Call {countryInfo.police}
+                      </a>
+                    </div>
                   )}
                 </div>
               )}

@@ -437,7 +437,7 @@ export default function TriageFlow() {
           zIndex: 30,
 
           padding:
-            '14px 20px calc(14px + var(--safe-bottom, 0px))',
+            '14px 0 calc(14px + var(--safe-bottom, 0px))',
 
           background: 'var(--bg-card)',
 
@@ -449,8 +449,9 @@ export default function TriageFlow() {
       >
         <div
           style={{
-            maxWidth: 680,
+            maxWidth: 480,
             margin: '0 auto',
+            padding: '0 20px',
           }}
         >
           <button
