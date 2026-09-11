@@ -32,7 +32,14 @@ safereach/
     └── data_pipeline/ osm_import.py — Overpass API → PostgreSQL → JSON
 ```
 
-**Offline-first principle:** Every core feature (triage, facility lookup, first-aid, maps) works with zero network. The backend is the enhancement/sync layer, never a dependency for life-critical flows.
+**Offline-first principle:** Toggle airplane mode after first page load. Full triage, facility lookup, first-aid guidance, and the map all work with zero network connection.
+
+The service worker pre-caches all app assets on first load. Map tiles for your
+detected country are proactively fetched at zoom levels 10-13 (city-level
+navigation detail) capped at 200 tiles to respect device storage.
+
+Triage and incident history are stored locally and can be synchronized with
+the backend when connectivity is available.
 
 ## Data sources
 
@@ -76,14 +83,14 @@ navigation detail) capped at 200 tiles to respect device storage.
 
 1. Open app → auto-detects country → calm HomeScreen with emergency numbers
 2. Tap "Find Emergency Help" → triage Q1-5 → classified as CRITICAL
-3. Results → muted severity banner → 3 ranked hospitals → large "Call" button
+3. Results → muted severity banner → ranked hospitals → large "Call" button
 4. Tap "First Aid Guide" → CPR steps in Bengali
-5. **Toggle airplane mode** → repeat steps 1-4 including map → everything works
+5. Toggle airplane mode → repeat steps 1-4 including map → everything works
 6. Silent SOS → opens dialer + queues SMS with GPS location
 7. Change country to Thailand → shows 1669, Thai hospitals, Thai language
 8. Settings → emergency contact, crash detection toggle, offline data status
+9. Accident History → view locally stored incidents and synchronization status
 
-## Hackathon
 
 Submitted for: Road Safety Hackathon 2026, IIT Madras CoERS  
 Problem statement: RoadSOS  
